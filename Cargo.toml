@@ -1,0 +1,13 @@
+[package]
+name = "proc-macro-error"
+version = "0.1.0"
+authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
+description = "Drop-in replacement to panics in proc-macros"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+quote = "0.6"
+proc-macro2 = "0.4"
+syn = "0.15"
