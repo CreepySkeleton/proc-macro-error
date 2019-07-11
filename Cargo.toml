@@ -3,9 +3,17 @@ name = "proc-macro-error"
 version = "0.1.0"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 description = "Drop-in replacement to panics in proc-macros"
+
+repository = "https://github.com/CreepySkeleton/proc-macro-error"
+readme = "Readme.md"
+keywords = ["proc-macro", "error", "errors"]
+categories = ["development-tools::procedural-macro-helpers"]
+license = "MIT"
+
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[badges]
+maintenance = { status = "actively-developed" }
 
 [dependencies]
 quote = "0.6"
