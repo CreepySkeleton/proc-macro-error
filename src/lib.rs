@@ -42,12 +42,12 @@
 //!             // we've got a span to blame, let's use it
 //!             let span = err.span_should_be_highlighted();
 //!             let msg = err.message();
-//!             // This call jumps directly at the end of `filter_macro_errors!` invocation
+//!             // This call jumps directly to the end of `filter_macro_errors!` invocation
 //!             span_error!(span, "You made an error, go fix it: {}", msg);
 //!         }
-//!         
-//!         // You can use some handy shortcuts if your error type
-//!         // implements Into<MacroError>         
+//!
+//!         // `Result` gets some handy shortcuts if your error type implements
+//!         // Into<MacroError>. `Option` has them unconditionally
 //!         use proc_macro_error::ResultExt;
 //!         more_logic(&input).expect_or_exit("What a careless user, behave!");
 //!
@@ -61,32 +61,32 @@
 //!         // Now all the processing is done, return `proc_macro::TokenStream`
 //!         quote!(/* stuff */).into()
 //!     }
-//!     
+//!
 //!     // At this point we have a new shining `proc_macro::TokenStream`!
 //! }
 //! ```
 //!
 //! ## How it works
 //! I must confess: I used panics as a try/catch mechanism. I've committed this
-//! sin so others may live in peace and prosperity, god save my soul. 
+//! sin so others may live in peace and prosperity, god save my soul.
 //!
-//! Essentially, the `filter_macro_errors!` macro is a 
+//! Essentially, the `filter_macro_errors!` macro is a
 //! ```C++
-//! try { 
-//!     /* your code */ 
-//! } catch (MacroError) { 
-//!     /* conversion to compile_error! */ 
+//! try {
+//!     /* your code */
+//! } catch (MacroError) {
+//!     /* conversion to compile_error! */
 //! }
 //! ```
 //!
-//! `span_error!` and co are 
+//! `span_error!` and co are
 //! ```C++
 //! throw MacroError::new(span, format!(msg...));
 //! ```
 //!
-//! When you do `span_error!` you trigger panic
+//! By calling `span_error!` you trigger panic
 //! that will be caught by `filter_macro_errors!` and converted to `compile_error!` invocation.
-//! All the panics triggered not by `span_error!` and co will be resumed as is.
+//! All the panics that wasn't triggered by `span_error!` and co but any other reason will be resumed as is.
 //!
 //! Panic catching is indeed *slow* but the macro is about to abort anyway so speed is not
 //! a concern here. Please note that this crate is not intended to be used in any other way
@@ -137,7 +137,7 @@ macro_rules! span_error {
 }
 
 /// Shortcut for `span_error!(Span::call_site(), msg...)`. This macro
-/// is still considered preferable over plain panic, see [#Motivation]
+/// is still considered preferable over plain panic, see [Motivation](##Motivation)
 #[macro_export]
 macro_rules! call_site_error {
     ($fmt:literal, $($args:expr),*) => {{
@@ -162,23 +162,25 @@ macro_rules! call_site_error {
 /// containing a `compile_error!` invocation.
 ///
 /// ```ignore
+/// // This is your main entry point
 /// #[proc_macro]
 /// pub fn make_answer(input: TokenStream) -> TokenStream {
-///     // this macro at the top level
+///     // This macro **must** be placed at the top level.
+///     // No need to touch the code inside though.
 ///     filter_macro_errors! {
 ///         // `parse_macro_input!` and its friends work just fine inside this macro
 ///         let input = parse_macro_input!(input as MyParser);
 ///
 ///         if let Err(err) = some_logic(&input) {
-///             /// we've got a span to blame, let's use it
+///             // we've got a span to blame, let's use it
 ///             let span = err.span_should_be_highlighted();
 ///             let msg = err.message();
-///             // This call jumps directly at the end of `filter_macro_errors!` invocation
+///             // This call jumps directly to the end of `filter_macro_errors!` invocation
 ///             span_error!(span, "You made an error, go fix it: {}", msg);
 ///         }
-///         
-///         // You can use some handy shortcuts if your error type
-///         // implements Into<MacroError>         
+///
+///         // `Result` gets some handy shortcuts if your error type implements
+///         // Into<MacroError>. `Option` has them unconditionally
 ///         use proc_macro_error::ResultExt;
 ///         more_logic(&input).expect_or_exit("What a careless user, behave!");
 ///
@@ -192,7 +194,7 @@ macro_rules! call_site_error {
 ///         // Now all the processing is done, return `proc_macro::TokenStream`
 ///         quote!(/* stuff */).into()
 ///     }
-///     
+///
 ///     // At this point we have a new shining `proc_macro::TokenStream`!
 /// }
 /// ```

@@ -42,12 +42,12 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
             // we've got a span to blame, let's use it
             let span = err.span_should_be_highlighted();
             let msg = err.message();
-            // This call jumps directly at the end of `filter_macro_errors!` invocation
+            // This call jumps directly to the end of `filter_macro_errors!` invocation
             span_error!(span, "You made an error, go fix it: {}", msg);
         }
-        
-        // You can use some handy shortcuts if your error type
-        // implements Into<MacroError>         
+
+        // `Result` gets some handy shortcuts if your error type implements
+        // Into<MacroError>. `Option` has them unconditionally
         use proc_macro_error::ResultExt;
         more_logic(&input).expect_or_exit("What a careless user, behave!");
 
@@ -61,25 +61,25 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
         // Now all the processing is done, return `proc_macro::TokenStream`
         quote!(/* stuff */).into()
     }
-    
+
     // At this point we have a new shining `proc_macro::TokenStream`!
 }
 ```
 
 ## How it works
 I must confess: I used panics as a try/catch mechanism. I've committed this
-sin so others may live in peace and prosperity, god save my soul. 
+sin so others may live in peace and prosperity, god save my soul.
 
-Essentially, the `filter_macro_errors!` macro is a 
+Essentially, the `filter_macro_errors!` macro is a
 ```C++
-try { 
-    /* your code */ 
-} catch (MacroError) { 
-    /* conversion to compile_error! */ 
+try {
+    /* your code */
+} catch (MacroError) {
+    /* conversion to compile_error! */
 }
 ```
 
-`span_error!` and co are 
+`span_error!` and co are
 ```C++
 throw MacroError::new(span, format!(msg...));
 ```
