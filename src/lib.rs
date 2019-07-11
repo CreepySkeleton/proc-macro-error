@@ -39,7 +39,7 @@
 //!         let input = parse_macro_input!(input as MyParser);
 //!
 //!         if let Err(err) = some_logic(&input) {
-//!             //! we've got a span to blame, let's use it
+//!             // we've got a span to blame, let's use it
 //!             let span = err.span_should_be_highlighted();
 //!             let msg = err.message();
 //!             // This call jumps directly at the end of `filter_macro_errors!` invocation
