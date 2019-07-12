@@ -1,6 +1,6 @@
 # proc-macro-error
 
-[![Inline docs](https://docs.rs/proc-macro-error/badge.svg)](https://docs.rs/proc-macro-error/badge.svg)
+[![Inline docs](https://docs.rs/proc-macro-error/badge.svg)](https://docs.rs/proc-macro-error)
 
 Drop-in replacement to panics in proc-macros.
 
