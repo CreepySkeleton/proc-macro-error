@@ -4,6 +4,14 @@
 
 Drop-in replacement to panics in proc-macros.
 
+## NOTE:
+
+This crate is under active development and I'm kind of new in crates.io stuff. Although
+I don't foresee any API breaking changes yet, this crate might update quite frequently
+due to documentation-related issues. So please use `proc-macro-error = "0.1`
+instead of precise `proc-macro-error = "0.1.x"` for some fixed "x". I obey
+[semver specs](https://semver.org/) so any breaking change will bump the minor version.
+
 # Motivation
 
 Error handling in proc-macros sucks. It's not much of a choice today:
@@ -34,7 +42,7 @@ This crate aims to provide such a mechanism. All you have to do is enclose all
 the code inside your top-level `#[proc_macro]` function in [`filter_macro_errors!`]
 invocation and change panics to [`span_error!`]/[`call_site_error!`] where appropriate:
 
-```rust, ignore
+```rust
 // This is your main entry point
 #[proc_macro]
 pub fn make_answer(input: TokenStream) -> TokenStream {
@@ -96,9 +104,12 @@ All the panics that wasn't triggered by [`span_error!`] and co but any other rea
 
 Panic catching is indeed *slow* but the macro is about to abort anyway so speed is not
 a concern here. Please note that this crate is not intended to be used in any other way
-than a proc-macro error reporting, use [`Result`] and `?` instead.
+than a proc-macro error reporting, use `Result` and `?` instead.
 
 # Testing
 TODO: fork https://github.com/laumann/compiletest-rs and make it understand explicit line numbers.
 
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
+[`filter_macro_errors!`]: https://docs.rs/proc-macro-error/0.1/proc_macro_error/macro.filter_macro_errors.html
+[`call_site_error!`]: https://docs.rs/proc-macro-error/0.1/proc_macro_error/macro.call_site_error.html
+[`span_error!`]: https://docs.rs/proc-macro-error/0.1/proc_macro_error/macro.span_error.html
