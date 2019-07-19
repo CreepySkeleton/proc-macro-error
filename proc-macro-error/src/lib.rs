@@ -16,7 +16,7 @@
 //! In `lib.rs`:
 //!
 //!
-//! ```rust
+//! ```rust, ignore
 //! extern crate proc_macro_error;
 //! use proc_macro_error::{
 //!     filter_macro_errors,
