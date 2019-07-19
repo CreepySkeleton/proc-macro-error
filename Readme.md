@@ -122,9 +122,6 @@ Panic catching is indeed *slow* but the macro is about to abort anyway so speed 
 a concern here. Please note that this crate is not intended to be used in any other way
 than a proc-macro error reporting, use `Result` and `?` instead.
 
-# Testing
-TODO: fork https://github.com/laumann/compiletest-rs and make it understand explicit line numbers.
-
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
 [`filter_macro_errors!`]: https://docs.rs/proc-macro-error/0.1/proc_macro_error/macro.filter_macro_errors.html
 [`call_site_error!`]: https://docs.rs/proc-macro-error/0.1/proc_macro_error/macro.call_site_error.html
