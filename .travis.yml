@@ -2,3 +2,7 @@ language: rust
 script:
   - cargo build --all
   - cargo test --all
+notifications:
+  slack:
+    on_failure: always
+    on_success: never

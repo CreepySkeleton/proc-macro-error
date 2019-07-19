@@ -1,5 +1,6 @@
 # proc-macro-error
 
+[![Build Status](https://travis-ci.org/CreepySkeleton/proc-macro-error.svg?branch=master)](https://travis-ci.org/CreepySkeleton/proc-macro-error)
 [![Inline docs](https://docs.rs/proc-macro-error/badge.svg)](https://docs.rs/proc-macro-error)
 
 This crate aims to provide an error reporting mechanism that is usable inside
