@@ -1,0 +1,5 @@
+error: call_site_error! 2+ args test
+ --> $DIR/call_site_many.rs:5:1
+  |
+5 | make_fn!(call_site_many);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^

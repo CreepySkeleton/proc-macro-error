@@ -1,0 +1,5 @@
+error: span_error! single-arg test
+ --> $DIR/span_single.rs:5:10
+  |
+5 | make_fn!(span_single);
+  |          ^^^^^^^^^^^

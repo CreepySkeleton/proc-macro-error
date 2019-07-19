@@ -1,0 +1,21 @@
+[package]
+name = "proc-macro-error"
+version = "0.1.3"
+authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
+description = "Drop-in replacement to panics in proc-macros"
+
+repository = "https://github.com/CreepySkeleton/proc-macro-error"
+readme = "../README.md"
+keywords = ["proc-macro", "error", "errors"]
+categories = ["development-tools::procedural-macro-helpers"]
+license = "MIT"
+
+edition = "2018"
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+quote = "0.6"
+proc-macro2 = "0.4"
+syn = "0.15"

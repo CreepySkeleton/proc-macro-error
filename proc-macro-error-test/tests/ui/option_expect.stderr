@@ -1,0 +1,5 @@
+error: Option::expect_or_exit() test
+ --> $DIR/option_expect.rs:5:1
+  |
+5 | make_fn!(option_expect);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^

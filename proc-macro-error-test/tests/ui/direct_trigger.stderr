@@ -1,0 +1,5 @@
+error: direct triger_error() test
+ --> $DIR/direct_trigger.rs:5:1
+  |
+5 | make_fn!(trigger);
+  | ^^^^^^^^^^^^^^^^^^

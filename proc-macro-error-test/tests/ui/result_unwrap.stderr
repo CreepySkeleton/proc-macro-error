@@ -1,0 +1,5 @@
+error: Result::unwrap_or_exit() test
+ --> $DIR/result_unwrap.rs:5:10
+  |
+5 | make_fn!(result_unwrap);
+  |          ^^^^^^^^^^^^^

@@ -1,0 +1,5 @@
+error: span_error! 3+ args test
+ --> $DIR/span_many.rs:5:10
+  |
+5 | make_fn!(span_many);
+  |          ^^^^^^^^^
