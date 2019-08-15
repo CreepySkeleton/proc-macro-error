@@ -3,24 +3,24 @@
 //! Unlike [`MacroError`](crate::single::MacroError) type, [`MultiMacroErrors`] **is**
 //! intended to be used directly by users, there are no macros to help with this (yet).
 //!
+//! # Example
+//!
+//! ```rust
 //! fn parse_field(field: syn::FieldsNamed) -> Result<(), MacroError> {
 //!     // ...
 //! }
 //!
-//! # Example
-//!
-//! ```rust,ignore
 //! #[proc_macro_derive(Hello)]
 //! fn hello(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 //!     filter_macro_errors! {
 //!         let err_storage = MultiMacroErrors::new();
 //!
 //!         // ... retrieve fields struct ...
-//!         let fields = parse_struct(derive);
+//!         let fields = parse_struct(input);
 //!         for field in fields {
 //!             match parse_field(fields) {
 //!                 Ok(a) => process(),
-//!                 Err(err) => err_storage.push(err)
+//!                 Err(err) => err_storage.add(err)
 //!             }
 //!         }
 //!
