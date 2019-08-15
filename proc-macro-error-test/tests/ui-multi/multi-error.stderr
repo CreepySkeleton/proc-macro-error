@@ -1,0 +1,17 @@
+error: multi1
+ --> $DIR/multi-error.rs:5:10
+  |
+5 | make_fn!(multi1, multi2, _, multi3);
+  |          ^^^^^^
+
+error: multi2
+ --> $DIR/multi-error.rs:5:18
+  |
+5 | make_fn!(multi1, multi2, _, multi3);
+  |                  ^^^^^^
+
+error: multi3
+ --> $DIR/multi-error.rs:5:29
+  |
+5 | make_fn!(multi1, multi2, _, multi3);
+  |                             ^^^^^^
