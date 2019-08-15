@@ -9,16 +9,16 @@ use proc_macro_error::*;
 use quote::quote;
 use syn::token::*;
 use syn::{
-    punctuated::Punctuated,
     parse::{Parse, ParseStream},
+    parse_macro_input,
+    punctuated::Punctuated,
     spanned::Spanned,
-    parse_macro_input, Ident, Result, Token,
+    Ident, Result, Token,
 };
-
 
 struct IdentOrUnderscore {
     span: Span,
-    part: String
+    part: String,
 }
 
 impl IdentOrUnderscore {
@@ -26,7 +26,6 @@ impl IdentOrUnderscore {
         IdentOrUnderscore { span, part }
     }
 }
-
 
 impl Parse for IdentOrUnderscore {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -44,7 +43,6 @@ impl Parse for IdentOrUnderscore {
     }
 }
 
-
 struct Args(Vec<IdentOrUnderscore>);
 
 impl Parse for Args {
@@ -54,11 +52,11 @@ impl Parse for Args {
     }
 }
 
-
 #[proc_macro]
 pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     filter_macro_errors! {
         let mut name = String::new();
+        let mut err_storage = MultiMacroErrors::new();
 
         let input = parse_macro_input!(input as Args);
 
@@ -74,7 +72,10 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 "call_site_many" => call_site_error!("call_site_error! 2{} args {}", "+", "test"),
                 "call_site_single" => call_site_error!("call_site_error! single-arg test"),
 
-                "trigger" => trigger_error("direct triger_error() test"),
+                "trigger" => MacroError::new(
+                        arg.span,
+                        format!("direct MacroError::trigger() test - {}", arg.part))
+                    .trigger(),
 
                 "result_expect" => {
                     let e = syn::Error::new(arg.span, "error");
@@ -90,6 +91,8 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     None.expect_or_exit("Option::expect_or_exit() test")
                 }
 
+                part if part.starts_with("multi") => err_storage.add_span_msg(arg.span, arg.part),
+
                 _ => name.push_str(&arg.part),
             }
         }
@@ -98,6 +101,8 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if name.is_empty() {
             panic!("empty name")
         }
+
+        err_storage.trigger_on_error();
 
         let name = Ident::new(&name, Span::call_site());
         quote!( fn #name() {} ).into()

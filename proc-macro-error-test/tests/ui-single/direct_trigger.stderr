@@ -1,0 +1,5 @@
+error: direct MacroError::trigger() test - trigger
+ --> $DIR/direct_trigger.rs:5:10
+  |
+5 | make_fn!(trigger);
+  |          ^^^^^^^

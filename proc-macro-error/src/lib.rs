@@ -1,9 +1,10 @@
-
 //! # proc-macro-error
 //!
 //! This crate aims to provide an error reporting mechanism that is usable inside
 //! `proc-macros`, can highlight a specific span, and can be migrated from
 //! `panic!`-based errors with minimal efforts.
+//!
+//! Also, there's a facility to report [multiple errors][crate::multi].
 //!
 //! ## Usage
 //!
@@ -97,6 +98,7 @@
 //! see [Usage](#usage)
 //!
 //! # How it works
+//!
 //! Effectively, it emulates try-catch mechanism on top of panics.
 //!
 //! Essentially, the [`filter_macro_errors!`] macro is a
@@ -115,8 +117,10 @@
 //!
 //! By calling [`span_error!`] you trigger panic that will be caught by [`filter_macro_errors!`]
 //! and converted to [`compile_error!`][compl_err] invocation.
-//! All the panics that wasn't triggered by [`span_error!`] and co but any other reason
+//! All the panics that weren't triggered by [`span_error!`] and co but any other reason
 //! will be resumed as is.
+//!
+//! # Performance
 //!
 //! Panic catching is indeed *slow* but the macro is about to abort anyway so speed is not
 //! a concern here. Please note that this crate is not intended to be used in any other way
@@ -129,11 +133,12 @@
 // reexports for use in macros
 pub extern crate proc_macro;
 pub extern crate proc_macro2;
-extern crate quote;
-extern crate syn;
 
-use proc_macro2::{Span, TokenStream};
-use quote::quote_spanned;
+pub mod multi;
+pub mod single;
+
+pub use multi::MultiMacroErrors;
+pub use single::MacroError;
 
 /// Makes a [`MacroError`] instance from provided arguments (`panic!`-like)
 /// and triggers panic in hope it will be caught by [`filter_macro_errors!`].
@@ -142,13 +147,14 @@ use quote::quote_spanned;
 ///
 /// This macro is meant to be a `panic!` drop-in replacement so its syntax is very similar to `panic!`,
 /// but it has three forms instead of two:
+///
 /// 1. "panic-format-like" form: span, formatting [`str`] literal, comma-separated list of args.
 ///     First argument is a span, all the rest gets passed to [`format!`] to build the error message.
 /// 2. "panic-single-arg-like" form: span, expr, no comma at the end.
 ///     First argument is a span, the second is our error message, it must implement [`ToString`].
-/// 3. "trigger_error-like" form: single expr.
-///     Literally `trigger_error(arg)`. It's here just for convenience so [`span_error!`] can be used
-///     with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`] and so on...
+/// 3. "MacroError::trigger-like" form: single expr.
+///     Literally `MacroError::from(arg).trigger()`. It's here just for convenience so [`span_error!`]
+///     can be used with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`] and so on...
 ///
 #[macro_export]
 macro_rules! span_error {
@@ -156,22 +162,20 @@ macro_rules! span_error {
         let msg = format!($fmt, $($args),*);
         // we use $span.into() so it would work with proc_macro::Span and
         // proc_macro2::Span all the same
-        let err = $crate::MacroError::new($span.into(), msg);
-        $crate::trigger_error(err)
+        $crate::MacroError::new($span.into(), msg).trigger()
     }};
 
     ($span:expr, $msg:expr) => {{
         // we use $span.into() so it would work with proc_macro::Span and
         // proc_macro2::Span all the same
-        let err = $crate::MacroError::new($span.into(), $msg.to_string());
-        $crate::trigger_error(err)
+        $crate::MacroError::new($span.into(), $msg.to_string()).trigger()
     }};
 
-    ($err:expr) => { $crate::trigger_error($err) };
+    ($err:expr) => { $crate::MacroError::from($err).trigger() };
 }
 
 /// Shortcut for `span_error!(Span::call_site(), msg...)`. This macro
-/// is still preferable over plain panic, see [Motivation](#motivation)
+/// is still preferable over plain panic, see [Motivation](#motivation-and-getting-started)
 #[macro_export]
 macro_rules! call_site_error {
     ($fmt:literal, $($args:expr),*) => {{
@@ -191,7 +195,8 @@ macro_rules! call_site_error {
 
 /// This macro is supposed to be used at the top level of your `proc-macro`,
 /// the function marked with a `#[proc_macro*]` attribute. It catches all the
-/// errors triggered by [`span_error!`], [`call_site_error!`], and [`trigger_error`].
+/// errors triggered by [`span_error!`], [`call_site_error!`], [`MacroError::trigger`]
+/// and [`MultiMacroErrors`].
 /// Once caught, it converts it to a [`proc_macro::TokenStream`]
 /// containing a [`compile_error!`][compl_err] invocation.
 ///
@@ -204,43 +209,6 @@ macro_rules! filter_macro_errors {
         let f = move || -> $crate::proc_macro::TokenStream { $($code)* };
         $crate::filter_macro_error_panics(f)
     };
-}
-
-/// An error in a proc-macro. This struct preserves
-/// the given span so `rustc` can highlight the exact place in user code
-/// responsible for the error.
-///
-/// You're not supposed to use this type directly, use [`span_error!`] and [`call_site_error!`].
-#[derive(Debug)]
-pub struct MacroError {
-    span: Span,
-    msg: String,
-}
-
-impl MacroError {
-    /// Create an error with the span and message provided.
-    pub fn new(span: Span, msg: String) -> Self {
-        MacroError { span, msg }
-    }
-
-    /// A shortcut for `MacroError::new(Span::call_site(), message)`
-    pub fn call_site(msg: String) -> Self {
-        MacroError::new(Span::call_site(), msg)
-    }
-
-    /// Convert this error into a [`TokenStream`] containing these tokens: `compiler_error!(<message>);`.
-    /// All these tokens carry the span this error contains attached.
-    ///
-    /// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-    pub fn into_compile_error(self) -> TokenStream {
-        let MacroError { span, msg } = self;
-        quote_spanned! { span=> compile_error!(#msg); }
-    }
-
-    /// Abandon the old span and replace it with the given one.
-    pub fn set_span(&mut self, span: Span) {
-        self.span = span;
-    }
 }
 
 /// This traits expands [`Result<T, Into<MacroError>>`](std::result::Result) with some handy shortcuts.
@@ -269,28 +237,6 @@ pub trait OptionExt {
     fn expect_or_exit(self, msg: &str) -> Self::Some;
 }
 
-impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
-    type Ok = T;
-
-    fn unwrap_or_exit(self) -> T {
-        match self {
-            Ok(res) => res,
-            Err(e) => trigger_error(e),
-        }
-    }
-
-    fn expect_or_exit(self, message: &str) -> T {
-        match self {
-            Ok(res) => res,
-            Err(e) => {
-                let MacroError { msg, span } = e.into();
-                let msg = format!("{}: {}", message, msg);
-                trigger_error(MacroError::new(span, msg))
-            }
-        }
-    }
-}
-
 impl<T> OptionExt for Option<T> {
     type Some = T;
 
@@ -302,61 +248,38 @@ impl<T> OptionExt for Option<T> {
     }
 }
 
-impl From<syn::Error> for MacroError {
-    fn from(e: syn::Error) -> Self {
-        MacroError::new(e.span(), e.to_string())
-    }
-}
-
-impl From<String> for MacroError {
-    fn from(msg: String) -> Self {
-        MacroError::call_site(msg)
-    }
-}
-
-impl From<&str> for MacroError {
-    fn from(msg: &str) -> Self {
-        MacroError::call_site(msg.into())
-    }
-}
-
-impl ToString for MacroError {
-    fn to_string(&self) -> String {
-        self.msg.clone()
-    }
-}
-
-/// Trigger error, aborting the proc-macro's execution.
-///
-/// You're not supposed to use this function directly.
-/// Use [`span_error!`] or [`call_site_error!`] instead.
-pub fn trigger_error<T: Into<MacroError>>(err: T) -> ! {
-    panic!(Payload(err.into()))
-}
-
 /// Execute the closure and catch all the panics triggered by
-/// [`trigger_error`], converting them to [`proc_macro::TokenStream`].
-/// All the other panics will be passed through as is.
+/// [`single::MacroError::trigger`] and [`multi::MultiMacroErrors::trigger`],
+/// converting them to [`proc_macro::TokenStream`] instance.
+/// Any panic that is unrelated to this crate will be passed through as is.
 ///
 /// You're not supposed to use this function directly, use [`filter_macro_errors!`]
 /// instead.
+#[doc(hidden)]
 pub fn filter_macro_error_panics<F>(f: F) -> proc_macro::TokenStream
 where
     F: FnOnce() -> proc_macro::TokenStream,
 {
     use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
-    match catch_unwind(AssertUnwindSafe(f)) {
-        Ok(stream) => stream,
-        Err(boxed) => match boxed.downcast::<Payload>() {
-            Ok(err) => err.0.into_compile_error().into(),
-            Err(other) => resume_unwind(other),
-        },
+    macro_rules! probe_error {
+        ($t:ty) => {
+            |boxed: Box<dyn std::any::Any + Send + 'static>| {
+                let payload = boxed.downcast::<Payload<$t>>()?;
+                let ts: proc_macro::TokenStream = (*payload).0.into();
+                Ok(ts)
+            }
+        };
     }
+
+    catch_unwind(AssertUnwindSafe(f))
+        .or_else(probe_error!(MacroError))
+        .or_else(probe_error!(MultiMacroErrors))
+        .unwrap_or_else(|boxed| resume_unwind(boxed))
 }
 
-struct Payload(MacroError);
+struct Payload<T>(T);
 
 // SAFE: Payload is private, a user can't use it to make any harm.
-unsafe impl Send for Payload {}
-unsafe impl Sync for Payload {}
+unsafe impl<T> Send for Payload<T> {}
+unsafe impl<T> Sync for Payload<T> {}
