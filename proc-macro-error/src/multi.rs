@@ -5,7 +5,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! fn parse_field(field: syn::FieldsNamed) -> Result<(), MacroError> {
 //!     // ...
 //! }
