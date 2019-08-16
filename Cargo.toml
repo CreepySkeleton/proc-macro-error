@@ -2,5 +2,5 @@
 
 members = [
     "proc-macro-error",
-    "proc-macro-error-test",
+    "test-crate",
 ]

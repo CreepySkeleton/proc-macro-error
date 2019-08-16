@@ -1,6 +1,6 @@
 [package]
-name = "proc-macro-error-test"
-version = "0.2.2"
+name = "test-crate"
+version = "0.2.3"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 edition = "2018"
 

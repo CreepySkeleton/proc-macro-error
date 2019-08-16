@@ -4,7 +4,7 @@
 //! `proc-macros`, can highlight a specific span, and can be migrated from
 //! `panic!`-based errors with minimal efforts.
 //!
-//! Also, there's a facility to report [multiple errors][crate::multi].
+//! Also, there's a facility to report [multiple errors][multi].
 //!
 //! ## Usage
 //!
@@ -67,27 +67,27 @@
 //! ## Motivation and Getting started
 //!
 //! Error handling in proc-macros sucks. It's not much of a choice today:
-//! you either "bubble up" the error up to top-level of you macro and convert it to
+//! you either "bubble up" the error up to the top-level of your macro and convert it to
 //! a [`compile_error!`][compl_err] invocation or just use a good old panic. Both these ways suck:
 //!
 //! - Former sucks because it's quite redundant to unroll a proper error handling
 //!     just for critical errors that will crash the macro anyway so people mostly
 //!     choose not to bother with it at all and use panic. Almost nobody does it,
 //!     simple `.expect` is too tempting.
-//! - Later sucks because there's no way to carry out span info via panic. `rustc` will highlight
+//! - Later sucks because there's no way to carry out span info via `panic!`. `rustc` will highlight
 //!     the whole invocation itself but not some specific token inside it.
 //!     Furthermore, panics aren't for error-reporting at all; panics are for bug-detecting
 //!     (like unwrapping on `None` or out-of range indexing) or for early development stages
 //!     when you need a prototype ASAP and error handling can wait. Mixing these usages only
 //!     messes things up.
 //! - There is [`proc_macro::Diagnostics`](https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
-//!     but it's experimental.
+//!     but it's experimental. (This crate will be deprecated once `Diagnostics` is stable.)
 //!
 //! That said, we need a solution, but this solution must meet these conditions:
 //!
-//! - It must be better than panics. The main point: it must offer a way to carry span information
+//! - It must be better than `panic!`. The main point: it must offer a way to carry span information
 //!     over to user.
-//! - It must require as little effort as possible to migrate from panic. Ideally, a new
+//! - It must require as little effort as possible to migrate from `panic!`. Ideally, a new
 //!     macro with the same semantics plus ability to carry out span info.
 //! - It must be usable on stable.
 //!
@@ -97,37 +97,36 @@
 //! see [Usage](#usage)
 //!
 //! # How it works
+//! Effectively, it emulates try-catch mechanism on the top of panics.
 //!
-//! Effectively, it emulates try-catch mechanism on top of panics.
+//! Essentially, the [`filter_macro_errors!`] macro is (C++ like pseudo-code)
 //!
-//! Essentially, the [`filter_macro_errors!`] macro is a
 //! ```C++
 //! try {
 //!     /* your code */
 //! } catch (MacroError) {
 //!     /* conversion to compile_error! */
+//! } catch (MultiMacroErrors) {
+//!     /* conversion to multiple compile_error! invocations */
 //! }
 //! ```
 //!
 //! [`span_error!`] and co are
+//!
 //! ```C++
 //! throw MacroError::new(span, format!(msg...));
 //! ```
 //!
 //! By calling [`span_error!`] you trigger panic that will be caught by [`filter_macro_errors!`]
 //! and converted to [`compile_error!`][compl_err] invocation.
-//! All the panics that weren't triggered by [`span_error!`] and co but any other reason
-//! will be resumed as is.
-//!
-//! # Performance
+//! All the panics that weren't triggered by [`span_error!`] and co will be resumed as is.
 //!
 //! Panic catching is indeed *slow* but the macro is about to abort anyway so speed is not
-//! a concern here. Please note that this crate is not intended to be used in any other way
-//! than a proc-macro error reporting, use `Result` and `?` instead.
-//!
+//! a concern here. Please note that **this crate is not intended to be used in any other way
+//! than a proc-macro error reporting**, use `Result` and `?` instead.
 //!
 //! [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-//!
+//! [`proc_macro::Diagnostics`](https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
 
 // reexports for use in macros
 pub extern crate proc_macro;
