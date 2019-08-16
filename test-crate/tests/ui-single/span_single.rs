@@ -1,6 +1,6 @@
-extern crate proc_macro_error_test;
+extern crate test_crate;
 
-use proc_macro_error_test::make_fn;
+use test_crate::make_fn;
 
 make_fn!(span_single);
 

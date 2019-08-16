@@ -1,4 +1,3 @@
-extern crate proc_macro_error_test;
 extern crate trybuild;
 
 #[test]
