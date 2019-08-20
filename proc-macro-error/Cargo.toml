@@ -1,6 +1,6 @@
 [package]
 name = "proc-macro-error"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 description = "Drop-in replacement to panics in proc-macros"
 
@@ -12,12 +12,12 @@ license = "MIT"
 
 edition = "2018"
 
-[badges]
-maintenance = { status = "actively-developed" }
-
 [package.metadata.release]
 tag-name = "v{{version}}"
 no-dev-version = true
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 [dependencies]
 quote = "1"
