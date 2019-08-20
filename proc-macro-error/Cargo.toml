@@ -14,6 +14,7 @@ edition = "2018"
 
 [package.metadata.release]
 tag-name = "v{{version}}"
+pre-release-commit-message = "v{{version}}"
 no-dev-version = true
 
 [badges]
