@@ -11,7 +11,7 @@
 //! In your `Cargo.toml`:
 //!
 //! ```toml
-//! proc-macro-error = "0.1"
+//! proc-macro-error = "0.2"
 //! ```
 //!
 //! In `lib.rs`:

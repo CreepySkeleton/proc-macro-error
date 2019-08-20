@@ -14,7 +14,7 @@ Also, there's a facility to report [multiple errors][crate::multi].
 In your `Cargo.toml`:
 
 ```toml
-proc-macro-error = "0.1"
+proc-macro-error = "0.2"
 ```
 
 In `lib.rs`:
