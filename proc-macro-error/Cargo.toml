@@ -16,7 +16,8 @@ edition = "2018"
 maintenance = { status = "actively-developed" }
 
 [package.metadata.release]
-tag-prefix = "v"
+tag-name = "v{{version}}"
+no-dev-version = true
 
 [dependencies]
 quote = "1"
