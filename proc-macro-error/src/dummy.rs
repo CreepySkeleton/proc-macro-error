@@ -113,6 +113,16 @@ pub(crate) fn take_dummy() -> Option<TokenStream> {
 
 /// Sets dummy token stream which will be appended to `compile_error!(msg);...`
 /// invocations, should a trigger happen. Returns an old dummy, if set.
+///
+/// # Warning:
+/// If you do `set_dummy(Some(ts))` you **must** do `set_dummy(None)`
+/// before macro execution completes (`filer_macro_errors!` will do that for you)!
+/// Otherwise `rustc` will fail with creepy
+/// ```text
+/// thread 'rustc' panicked at 'use-after-free in `proc_macro` handle', src\libcore\option.rs:1166:5
+/// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
+/// error: proc-macro derive panicked
+/// ```
 pub fn set_dummy(dummy: Option<TokenStream>) -> Option<TokenStream> {
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(dummy))
 }

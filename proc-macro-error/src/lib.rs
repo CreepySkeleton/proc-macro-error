@@ -264,19 +264,21 @@ where
     use quote::ToTokens;
     use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
+    let caught = catch_unwind(AssertUnwindSafe(f));
+    let dummy = dummy::take_dummy();
+
     macro_rules! probe_error {
         ($t:ty) => {
             |boxed: Box<dyn std::any::Any + Send + 'static>| {
                 let payload = boxed.downcast::<Payload<$t>>()?;
                 let mut ts: TokenStream = (*payload).0.into();
-                dummy::take_dummy().to_tokens(&mut ts);
-
+                dummy.to_tokens(&mut ts);
                 Ok(ts.into())
             }
         };
     }
 
-    catch_unwind(AssertUnwindSafe(f))
+    caught
         .or_else(probe_error!(MacroError))
         .or_else(probe_error!(MultiMacroErrors))
         .unwrap_or_else(|boxed| resume_unwind(boxed))

@@ -1,4 +1,4 @@
-# v0.2.5 (2019-09-02)
+# v0.2.6 (2019-09-02)
 * Introduce support for dummy implementations via `dummy::set_dummy`
 * `multi::*` is now deprecated, will be completely rewritten in v0.3
 
