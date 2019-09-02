@@ -7,7 +7,7 @@ This crate aims to provide an error reporting mechanism that is usable inside
 `proc-macros`, can highlight a specific span, and can be migrated from
 `panic!`-based errors with minimal efforts.
 
-//! Also, there's [ability to append a dummy token stream][crate::dummy] to your errors.
+Also, there's [ability to append a dummy token stream][crate::dummy] to your errors.
 
 ## Usage
 
