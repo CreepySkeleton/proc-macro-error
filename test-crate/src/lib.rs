@@ -1,9 +1,3 @@
-extern crate proc_macro;
-extern crate proc_macro2;
-extern crate proc_macro_error;
-extern crate quote;
-extern crate syn;
-
 use proc_macro2::Span;
 use proc_macro_error::*;
 use quote::quote;
@@ -56,7 +50,6 @@ impl Parse for Args {
 pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     filter_macro_errors! {
         let mut name = String::new();
-        let mut err_storage = MultiMacroErrors::new();
 
         let input = parse_macro_input!(input as Args);
 
@@ -103,7 +96,7 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     span_error!(arg.span, "set_dummy test")
                 },
 
-                part if part.starts_with("multi") => err_storage.add_span_msg(arg.span, arg.part),
+                part if part.starts_with("multi") => push_span_error!(arg.span, "multiple error part: {}", part),
 
                 _ => name.push_str(&arg.part),
             }
@@ -113,8 +106,6 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if name.is_empty() {
             panic!("empty name")
         }
-
-        err_storage.trigger_on_error();
 
         let name = Ident::new(&name, Span::call_site());
         quote!( fn #name() {} ).into()

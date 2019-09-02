@@ -101,10 +101,10 @@
 //! ```
 
 use proc_macro2::TokenStream;
-use std::cell::RefCell;
+use std::cell::Cell;
 
 thread_local! {
-    pub(crate) static DUMMY_IMPL: RefCell<Option<TokenStream>> = RefCell::new(None);
+    pub(crate) static DUMMY_IMPL: Cell<Option<TokenStream>> = Cell::new(None);
 }
 
 pub(crate) fn take_dummy() -> Option<TokenStream> {

@@ -1,16 +1,16 @@
-error: multi1
+error: multiple error part: multi1
  --> $DIR/multi-error.rs:5:10
   |
 5 | make_fn!(multi1, multi2, _, multi3);
   |          ^^^^^^
 
-error: multi2
+error: multiple error part: multi2
  --> $DIR/multi-error.rs:5:18
   |
 5 | make_fn!(multi1, multi2, _, multi3);
   |                  ^^^^^^
 
-error: multi3
+error: multiple error part: multi3
  --> $DIR/multi-error.rs:5:29
   |
 5 | make_fn!(multi1, multi2, _, multi3);

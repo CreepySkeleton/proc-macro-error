@@ -7,8 +7,62 @@ use crate::Payload;
 use crate::ResultExt;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
+use quote::ToTokens;
 use std::convert::{AsMut, AsRef};
 use std::fmt::{Display, Formatter};
+
+/// Makes a [`MacroError`] instance from provided arguments (`panic!`-like)
+/// and triggers panic in hope it will be caught by [`filter_macro_errors!`].
+///
+/// # Syntax
+///
+/// This macro is meant to be a `panic!` drop-in replacement so its syntax is very similar to `panic!`,
+/// but it has three forms instead of two:
+///
+/// 1. "panic-format-like" form: span, formatting [`str`] literal, comma-separated list of args.
+///     First argument is a span, all the rest gets passed to [`format!`] to build the error message.
+/// 2. "panic-single-arg-like" form: span, expr, no comma at the end.
+///     First argument is a span, the second is our error message, it must implement [`ToString`].
+/// 3. "MacroError::trigger-like" form: single expr.
+///     Literally `MacroError::from(arg).trigger()`. It's here just for convenience so [`span_error!`]
+///     can be used with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`] and so on...
+///
+#[macro_export]
+macro_rules! span_error {
+    ($span:expr, $fmt:literal, $($args:expr),*) => {{
+        let msg = format!($fmt, $($args),*);
+        // we use $span.into() so it would work with proc_macro::Span and
+        // proc_macro2::Span all the same
+        $crate::MacroError::new($span.into(), msg).trigger()
+    }};
+
+    ($span:expr, $msg:expr) => {{
+        // we use $span.into() so it would work with proc_macro::Span and
+        // proc_macro2::Span all the same
+        $crate::MacroError::new($span.into(), $msg.to_string()).trigger()
+    }};
+
+    ($err:expr) => { $crate::MacroError::from($err).trigger() };
+}
+
+/// Shortcut for `span_error!(Span::call_site(), msg...)`. This macro
+/// is still preferable over plain panic, see [Motivation](#motivation-and-getting-started)
+#[macro_export]
+macro_rules! call_site_error {
+    ($fmt:literal, $($args:expr),*) => {{
+        use $crate::span_error;
+
+        let span = $crate::proc_macro2::Span::call_site();
+        span_error!(span, $fmt, $($args),*)
+    }};
+
+    ($msg:expr) => {{
+        use $crate::span_error;
+
+        let span = $crate::proc_macro2::Span::call_site();
+        span_error!(span, $msg)
+    }};
+}
 
 /// An single error in a proc-macro. This struct preserves
 /// the given span so `rustc` can highlight the exact place in user code
@@ -30,18 +84,6 @@ impl MacroError {
     /// A shortcut for `MacroError::new(Span::call_site(), message)`
     pub fn call_site(msg: String) -> Self {
         MacroError::new(Span::call_site(), msg)
-    }
-
-    /// Convert this error into a [`TokenStream`] containing these tokens: `compiler_error!(<message>);`.
-    /// All these tokens carry the span this error contains attached.
-    ///
-    /// There are `From<[MacroError]> for proc_macro/proc_macro2::TokenStream` implementations
-    /// so you can use `error.into()` instead of this method.
-    ///
-    /// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-    pub fn into_compile_error(self) -> TokenStream {
-        let MacroError { span, msg } = self;
-        quote_spanned! { span=> compile_error!(#msg); }
     }
 
     /// Abandon the old span and replace it with the given one.
@@ -81,6 +123,13 @@ impl From<&str> for MacroError {
     }
 }
 
+impl ToTokens for MacroError {
+    fn to_tokens(&self, ts: &mut TokenStream) {
+        let MacroError { ref msg, ref span } = *self;
+        ts.extend(quote_spanned!(*span=> compile_error!(#msg); ));
+    }
+}
+
 impl Display for MacroError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         Display::fmt(&self.msg, f)
@@ -106,18 +155,6 @@ impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
                 MacroError::new(span, msg).trigger()
             }
         }
-    }
-}
-
-impl From<MacroError> for TokenStream {
-    fn from(err: MacroError) -> Self {
-        err.into_compile_error()
-    }
-}
-
-impl From<MacroError> for proc_macro::TokenStream {
-    fn from(err: MacroError) -> Self {
-        err.into_compile_error().into()
     }
 }
 
