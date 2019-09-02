@@ -4,7 +4,7 @@
 //! `proc-macros`, can highlight a specific span, and can be migrated from
 //! `panic!`-based errors with minimal efforts.
 //!
-//! Also, there's a facility to report [multiple errors][multi].
+//! Also, there's [ability to append a dummy token stream][dummy] to your errors.
 //!
 //! ## Usage
 //!
@@ -132,9 +132,11 @@
 pub extern crate proc_macro;
 pub extern crate proc_macro2;
 
+pub mod dummy;
 pub mod multi;
 pub mod single;
 
+pub use dummy::set_dummy;
 pub use multi::MultiMacroErrors;
 pub use single::MacroError;
 
@@ -258,14 +260,18 @@ pub fn filter_macro_error_panics<F>(f: F) -> proc_macro::TokenStream
 where
     F: FnOnce() -> proc_macro::TokenStream,
 {
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
     use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
     macro_rules! probe_error {
         ($t:ty) => {
             |boxed: Box<dyn std::any::Any + Send + 'static>| {
                 let payload = boxed.downcast::<Payload<$t>>()?;
-                let ts: proc_macro::TokenStream = (*payload).0.into();
-                Ok(ts)
+                let mut ts: TokenStream = (*payload).0.into();
+                dummy::take_dummy().to_tokens(&mut ts);
+
+                Ok(ts.into())
             }
         };
     }

@@ -7,7 +7,7 @@ This crate aims to provide an error reporting mechanism that is usable inside
 `proc-macros`, can highlight a specific span, and can be migrated from
 `panic!`-based errors with minimal efforts.
 
-Also, there's a facility to report [multiple errors][crate::multi].
+//! Also, there's [ability to append a dummy token stream][crate::dummy] to your errors.
 
 ## Usage
 
@@ -129,7 +129,9 @@ than a proc-macro error reporting**, use `Result` and `?` instead.
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
 [`proc_macro::Diagnostics`](https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
 
+[crate::dummy]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/dummy/index.html
 [crate::multi]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/multi/index.html
+
 [`filter_macro_errors!`]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/macro.filter_macro_errors.html
 [`call_site_error!`]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/macro.call_site_error.html
 [`span_error!`]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/macro.span_error.html

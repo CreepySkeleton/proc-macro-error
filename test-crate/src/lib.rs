@@ -89,7 +89,19 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                 "option_expect" => {
                     None.expect_or_exit("Option::expect_or_exit() test")
-                }
+                },
+
+                "need_default" => {
+                    set_dummy(Some(quote! {
+                        impl Default for NeedDefault {
+                            fn default() -> Self {
+                                NeedDefault::A
+                            }
+                        }
+                    }));
+
+                    span_error!(arg.span, "set_dummy test")
+                },
 
                 part if part.starts_with("multi") => err_storage.add_span_msg(arg.span, arg.part),
 

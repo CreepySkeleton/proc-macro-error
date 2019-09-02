@@ -1,34 +1,5 @@
-//! This module contains data types and functions to be used for multi-error reporting.
-//!
-//! Unlike [`MacroError`](crate::single::MacroError) type, [`MultiMacroErrors`] **is**
-//! intended to be used directly by users, there are no macros to help with this (yet).
-//!
-//! # Example
-//!
-//! ```rust,ignore
-//! fn parse_field(field: syn::FieldsNamed) -> Result<(), MacroError> {
-//!     // ...
-//! }
-//!
-//! #[proc_macro_derive(Hello)]
-//! fn hello(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-//!     filter_macro_errors! {
-//!         let err_storage = MultiMacroErrors::new();
-//!
-//!         // ... retrieve fields struct ...
-//!         let fields = parse_struct(input);
-//!         for field in fields {
-//!             match parse_field(fields) {
-//!                 Ok(a) => process(),
-//!                 Err(err) => err_storage.add(err)
-//!             }
-//!         }
-//!
-//!         // abort if some errors had occurred
-//!         err_storage.trigger_on_error()
-//!     }
-//! }
-//! ```
+//! **This module is deprecated! Come back in v0.3.**
+#![doc(hidden)]
 
 use crate::ResultExt;
 use crate::{MacroError, Payload};
