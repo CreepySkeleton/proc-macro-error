@@ -125,7 +125,7 @@ thread_local! {
 /// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
 /// ```
 pub fn set_dummy(dummy: TokenStream) -> Option<TokenStream> {
-    DUMMY_IMPL.with(|old_dummy| old_dummy.replace(dummy))
+    DUMMY_IMPL.with(|old_dummy| old_dummy.replace(Some(dummy)))
 }
 
 /// Clear the global error storage, returning the old dummy, if present.

@@ -210,7 +210,7 @@ where
     use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
     let caught = catch_unwind(AssertUnwindSafe(f));
-    let dummy = dummy::set_dummy(None);
+    let dummy = dummy::cleanup();
     let err_storage = multi::cleanup();
 
     fn probe_error<T: ToTokens + 'static>(
