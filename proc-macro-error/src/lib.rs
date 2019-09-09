@@ -1,21 +1,17 @@
 //! # proc-macro-error
 //!
-//! This crate aims to provide an error reporting mechanism that is usable inside
-//! `proc-macros`, can highlight a specific span, and can be migrated from
-//! `panic!`-based errors with minimal efforts.
+//! This crate aims to make error reporting in proc-macros simple and easy to use.
+//! Migrate from `panic!`-based errors for as little effort as possible!
 //!
 //! Also, there's [ability to append a dummy token stream][dummy] to your errors.
 //!
-//! ## Usage
+//! ## Enticement
 //!
-//! In your `Cargo.toml`:
+//! Your errors look like
+//! ```text
+
 //!
-//! ```toml
-//! proc-macro-error = "0.2"
-//! ```
-//!
-//! In `lib.rs`:
-//!
+//! ### Singe error usage
 //! ```rust,ignore
 //! extern crate proc_macro_error;
 //! use proc_macro_error::{
@@ -27,7 +23,7 @@
 //! };
 //!
 //! // This is your main entry point
-//! #[proc_macro]
+//! #[proc_macro_]
 //! pub fn make_answer(input: TokenStream) -> TokenStream {
 //!     // This macro **must** be placed at the top level.
 //!     // No need to touch the code inside though.
@@ -138,6 +134,7 @@ pub mod single;
 
 pub use dummy::set_dummy;
 pub use single::MacroError;
+pub use multi::trigger_if_dirty;
 
 /// This macro is supposed to be used at the top level of your `proc-macro`,
 /// the function marked with a `#[proc_macro*]` attribute. It catches all the
@@ -207,34 +204,39 @@ where
     F: FnOnce() -> proc_macro::TokenStream,
 {
     use crate::multi::MultiMacroErrors;
-    use quote::quote;
+    use proc_macro2::TokenStream;
+    use quote::{quote, ToTokens};
+    use std::any::Any;
     use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
     let caught = catch_unwind(AssertUnwindSafe(f));
-    let dummy = dummy::take_dummy();
+    let dummy = dummy::set_dummy(None);
     let err_storage = multi::cleanup();
 
-    macro_rules! probe_error {
-        ($t:ty) => {
-            |boxed: Box<dyn std::any::Any + Send + 'static>| {
-                let payload = boxed.downcast::<Payload<$t>>()?.0;
-                let ts = quote!(#payload #dummy);
-                Ok(ts.into())
-            }
-        };
+    fn probe_error<T: ToTokens + 'static>(
+        boxed: Box<dyn Any + Send + 'static>,
+    ) -> Result<TokenStream, Box<dyn Any + Send + 'static>> {
+        let payload = boxed.downcast::<Payload<T>>()?.0.into_token_stream();
+        Ok(payload)
     }
 
-    caught
-        .map(|ts| {
+    match caught {
+        Ok(ts) => {
             if err_storage.is_empty() {
                 ts
             } else {
                 quote!( #(#err_storage)* #dummy ).into()
             }
-        })
-        .or_else(probe_error!(MacroError))
-        .or_else(probe_error!(MultiMacroErrors))
-        .unwrap_or_else(|boxed| resume_unwind(boxed))
+        }
+
+        Err(boxed) => {
+            let err = probe_error::<MacroError>(boxed)
+                .or_else(probe_error::<MultiMacroErrors>)
+                .unwrap_or_else(|boxed| resume_unwind(boxed));
+
+            quote!( #err #(#err_storage)* #dummy ).into()
+        }
+    }
 }
 
 struct Payload<T>(T);

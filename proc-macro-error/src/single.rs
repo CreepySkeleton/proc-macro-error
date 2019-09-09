@@ -126,6 +126,7 @@ impl From<&str> for MacroError {
 impl ToTokens for MacroError {
     fn to_tokens(&self, ts: &mut TokenStream) {
         let MacroError { ref msg, ref span } = *self;
+        let msg = syn::LitStr::new(msg, span.clone());
         ts.extend(quote_spanned!(*span=> compile_error!(#msg); ));
     }
 }

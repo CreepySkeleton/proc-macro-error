@@ -1,3 +1,6 @@
+//! Facility to emit dummy implementations (or whatever) in case
+//! an error happen.
+//!
 //! `compile_error!` does not interrupt compilation right away. This means
 //! `rustc` doesn't just show you the error and abort, it carries on the
 //! compilation process, looking for other errors to report.
@@ -38,6 +41,7 @@
 //! The problem is: the generated token stream contains only `compile_error!`
 //! invocation, the impl was not generated. That means user will see two compilation
 //! errors:
+//!
 //! ```text
 //! error: set_dummy test
 //!  --> $DIR/probe.rs:9:10
@@ -45,14 +49,14 @@
 //! 9 |#[proc_macro_derive(MyTrait)]
 //!   |                    ^^^^^^^
 //!
-//! error[E0277]: the trait bound `Foo: Default` is not satisfied
-//!
-//!   --> $DIR/probe.rs:14:10
-//!
-//!    |
-//! 98 |     #[derive(MyTrait)]
-//!    |              ^^^^^^^ the trait `Default` is not implemented for `Foo`
-//!
+//! error[E0599]: no function or associated item named `do_thing` found for type `Foo` in the current scope
+//!  --> src\main.rs:3:10
+//!   |
+//! 1 | struct Foo;
+//!   | ----------- function or associated item `do_thing` not found for this
+//! 2 | fn main() {
+//! 3 |     Foo::do_thing(); // second BOOM!
+//!   |          ^^^^^^^^ function or associated item not found in `Foo`
 //! ```
 //!
 //! But the second error is meaningless! We definitely need to fix this.
@@ -61,6 +65,7 @@
 //! omit `impl MyTrait for #name` and fill functions bodies with `unimplemented!()`.
 //!
 //! This is how you do it:
+//!
 //! ```rust,ignore
 //!  trait MyTrait {
 //!      fn do_thing();
@@ -107,21 +112,17 @@ thread_local! {
     pub(crate) static DUMMY_IMPL: Cell<Option<TokenStream>> = Cell::new(None);
 }
 
-pub(crate) fn take_dummy() -> Option<TokenStream> {
-    DUMMY_IMPL.with(|dummy| dummy.replace(None))
-}
-
 /// Sets dummy token stream which will be appended to `compile_error!(msg);...`
-/// invocations, should a trigger happen. Returns an old dummy, if set.
+/// invocations, should a trigger happen and/or global error storage would
+/// appear not to be empty. Returns an old dummy, if set.
 ///
 /// # Warning:
 /// If you do `set_dummy(Some(ts))` you **must** do `set_dummy(None)`
-/// before macro execution completes (`filer_macro_errors!` will do that for you)!
-/// Otherwise `rustc` will fail with creepy
+/// before macro execution completes ([`filer_macro_errors!`] does it for you)!
+/// Otherwise `rustc` will fail with cryptic
 /// ```text
 /// thread 'rustc' panicked at 'use-after-free in `proc_macro` handle', src\libcore\option.rs:1166:5
 /// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
-/// error: proc-macro derive panicked
 /// ```
 pub fn set_dummy(dummy: Option<TokenStream>) -> Option<TokenStream> {
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(dummy))

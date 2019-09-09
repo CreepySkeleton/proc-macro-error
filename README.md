@@ -99,39 +99,17 @@ the code inside your top-level `#[proc_macro]` function in [`filter_macro_errors
 invocation and change panics to [`span_error!`]/[`call_site_error!`] where appropriate,
 see [Usage](#usage)
 
-# How it works
-Effectively, it emulates try-catch mechanism on top of panics.
+# Disclaimer
 
-Essentially, the [`filter_macro_errors!`] macro is (C++ like pseudo-code)
-```C++
-try {
-    /* your code */
-} catch (MacroError) {
-    /* conversion to compile_error! */
-} catch (MultiMacroErrors) {
-    /* conversion to multiple compile_error! invocations */
-}
-```
-
-[`span_error!`] and co are
-```C++
-throw MacroError::new(span, format!(msg...));
-```
-
-By calling [`span_error!`] you trigger panic that will be caught by [`filter_macro_errors!`]
-and converted to [`compile_error!`][compl_err] invocation.
-All the panics that weren't triggered by [`span_error!`] and co will be resumed as is.
-
-Panic catching is indeed *slow* but the macro is about to abort anyway so speed is not
-a concern here. Please note that **this crate is not intended to be used in any other way
-than a proc-macro error reporting**, use `Result` and `?` instead.
+Please note that **this crate is not intended to be used in any other way
+than a proc-macro error reporting**, use `Result` and `?` for normal error processing.
 
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
 [`proc_macro::Diagnostics`](https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
 
-[crate::dummy]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/dummy/index.html
-[crate::multi]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/multi/index.html
+[crate::dummy]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/dummy/index.html
+[crate::multi]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/multi/index.html
 
-[`filter_macro_errors!`]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/macro.filter_macro_errors.html
-[`call_site_error!`]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/macro.call_site_error.html
-[`span_error!`]: https://docs.rs/proc-macro-error/0.2/proc_macro_error/macro.span_error.html
+[`filter_macro_errors!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.filter_macro_errors.html
+[`call_site_error!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.call_site_error.html
+[`span_error!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.span_error.html
