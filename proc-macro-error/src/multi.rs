@@ -13,7 +13,7 @@ thread_local! {
 }
 
 #[macro_export]
-macro_rules! push_span_error {
+macro_rules! emit_error {
     ($span:expr, $fmt:literal, $($args:expr),*) => {{
         let msg = format!($fmt, $($args),*);
         // we use $span.into() so it would work with proc_macro::Span and
@@ -38,25 +38,26 @@ macro_rules! push_span_error {
 /// Shortcut for `span_error!(Span::call_site(), msg...)`. This macro
 /// is still preferable over plain panic, see [Motivation](#motivation-and-getting-started)
 #[macro_export]
-macro_rules! push_call_site_error {
+macro_rules! emit_call_site_error {
     ($fmt:literal, $($args:expr),*) => {{
         use $crate::push_span_error;
 
         let span = $crate::proc_macro2::Span::call_site();
-        span_error!(span, $fmt, $($args),*)
+        push_span_error!(span, $fmt, $($args),*)
     }};
 
     ($msg:expr) => {{
         use $crate::push_span_error;
 
         let span = $crate::proc_macro2::Span::call_site();
-        span_error!(span, $fmt, $($args),*)
+        push_span_error!(span, $msg)
     }};
 }
 
 /// Clear the global error storage, returning the errors contained.
 ///
 /// # Warning:
+///
 /// You **must** do it before macro execution completes
 /// ([`filter_macro_errors!`] does it for you)! If the storage
 /// is dirty at the end moment of macro execution `rustc` will fail with cryptic
@@ -70,11 +71,10 @@ pub fn cleanup() -> Vec<MacroError> {
 }
 
 /// Abort macro execution and show errors if global error storage is not empty.
-pub fn trigger_if_dirty() {
+pub fn abort_if_dirty() {
     ERR_STORAGE.with(|storage| {
         if !storage.borrow().is_empty() {
-            let errs = storage.replace(Vec::new());
-            panic!(Payload(errs))
+            panic!(AbortNow)
         }
     });
 }
@@ -86,16 +86,4 @@ pub fn trigger_if_dirty() {
 #[doc(hidden)]
 pub fn push_error(error: MacroError) {
     ERR_STORAGE.with(|storage| storage.borrow_mut().push(error))
-}
-
-/// Exists because I can't (and shouldn't) implement
-/// `ToTokens` for `Vec<MacroError>`
-pub(crate) struct MultiMacroErrors(Vec<MacroError>);
-
-impl ToTokens for MultiMacroErrors {
-    fn to_tokens(&self, ts: &mut TokenStream) {
-        for err in self.0.iter() {
-            err.to_tokens(ts);
-        }
-    }
 }

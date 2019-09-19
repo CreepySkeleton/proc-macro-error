@@ -213,13 +213,6 @@ where
     let dummy = dummy::cleanup();
     let err_storage = multi::cleanup();
 
-    fn probe_error<T: ToTokens + 'static>(
-        boxed: Box<dyn Any + Send + 'static>,
-    ) -> Result<TokenStream, Box<dyn Any + Send + 'static>> {
-        let payload = boxed.downcast::<Payload<T>>()?.0.into_token_stream();
-        Ok(payload)
-    }
-
     match caught {
         Ok(ts) => {
             if err_storage.is_empty() {
@@ -229,18 +222,17 @@ where
             }
         }
 
-        Err(boxed) => {
-            let err = probe_error::<MacroError>(boxed)
-                .or_else(probe_error::<MultiMacroErrors>)
-                .unwrap_or_else(|boxed| resume_unwind(boxed));
-
-            quote!( #err #(#err_storage)* #dummy ).into()
+        Err(boxed) => match boxed.downcast::<AbortNow>() {
+            Ok(_) => quote!( #(#err_storage)* #dummy ).into(),
+            Err(boxed) => resume_unwind(boxed),
         }
     }
+
+
 }
 
-struct Payload<T>(T);
+struct AbortNow;
 
-// SAFE: Payload is private, a user can't use it to make any harm.
+// SAFE: AbortNow is private, a user can't use it to make any harm.
 unsafe impl<T> Send for Payload<T> {}
 unsafe impl<T> Sync for Payload<T> {}

@@ -1,9 +1,9 @@
 //! Facility to emit dummy implementations (or whatever) in case
 //! an error happen.
 //!
-//! `compile_error!` does not interrupt compilation right away. This means
+//! `compile_error!` does not abort a compilation right away. This means
 //! `rustc` doesn't just show you the error and abort, it carries on the
-//! compilation process, looking for other errors to report.
+//! compilation process looking for other errors to report.
 //!
 //! Let's consider an example:
 //!

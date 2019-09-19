@@ -3,64 +3,71 @@
 //! These are supposed to be used through [`span_error!`] and [`call_site_error!`],
 //! see [crate level documentation](crate).
 
-use crate::Payload;
-use crate::ResultExt;
+use crate::{
+    ResultExt, AbortNow, multi::push_error
+};
+
 use proc_macro2::{Span, TokenStream};
-use quote::quote_spanned;
-use quote::ToTokens;
-use std::convert::{AsMut, AsRef};
-use std::fmt::{Display, Formatter};
+use quote::{quote_spanned, ToTokens};
+
+use std::{
+    convert::{AsMut, AsRef},
+    fmt::{Display, Formatter}
+};
+
 
 /// Makes a [`MacroError`] instance from provided arguments (`panic!`-like)
 /// and triggers panic in hope it will be caught by [`filter_macro_errors!`].
 ///
 /// # Syntax
 ///
-/// This macro is meant to be a `panic!` drop-in replacement so its syntax is very similar to `panic!`,
-/// but it has three forms instead of two:
+/// This macro is meant to be a `panic!` drop-in replacement so its
+/// syntax is very similar to `panic!`, but it has three forms instead of two:
 ///
-/// 1. "panic-format-like" form: span, formatting [`str`] literal, comma-separated list of args.
+/// 1. "panic-format-like" form: `abort!(span_expr, format_str_literal [, format_args...])
+///
 ///     First argument is a span, all the rest gets passed to [`format!`] to build the error message.
-/// 2. "panic-single-arg-like" form: span, expr, no comma at the end.
-///     First argument is a span, the second is our error message, it must implement [`ToString`].
-/// 3. "MacroError::trigger-like" form: single expr.
-///     Literally `MacroError::from(arg).trigger()`. It's here just for convenience so [`span_error!`]
-///     can be used with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`] and so on...
+///
+/// 2. "panic-single-arg-like" form: `abort!(span_expr, error_expr)`
+///
+///     First argument is a span, the second is the error message, it must implement [`ToString`].
+///
+/// 3. "MacroError::trigger-like" form: abort!(error_expr)`
+///
+///     Literally `MacroError::from(arg).abort()`. It's here just for convenience so [`span_error!`]
+///     can be used with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`]
+///     and so on...
 ///
 #[macro_export]
-macro_rules! span_error {
-    ($span:expr, $fmt:literal, $($args:expr),*) => {{
+macro_rules! abort {
+    ($span:expr, $fmt:literal, $($args:expr),* $(,)?) => {{
         let msg = format!($fmt, $($args),*);
-        // we use $span.into() so it would work with proc_macro::Span and
-        // proc_macro2::Span all the same
-        $crate::MacroError::new($span.into(), msg).trigger()
+        $crate::MacroError::new($span.into(), msg).abort()
     }};
 
-    ($span:expr, $msg:expr) => {{
-        // we use $span.into() so it would work with proc_macro::Span and
-        // proc_macro2::Span all the same
-        $crate::MacroError::new($span.into(), $msg.to_string()).trigger()
+    ($span:expr, $msg:expr $(,)?) => {{
+        $crate::MacroError::new($span.into(), $msg.to_string()).abort()
     }};
 
-    ($err:expr) => { $crate::MacroError::from($err).trigger() };
+    ($err:expr $(,)?) => { $crate::MacroError::from($err).abort() };
 }
 
-/// Shortcut for `span_error!(Span::call_site(), msg...)`. This macro
+/// Shortcut for `abort!(Span::call_site(), msg...)`. This macro
 /// is still preferable over plain panic, see [Motivation](#motivation-and-getting-started)
 #[macro_export]
-macro_rules! call_site_error {
-    ($fmt:literal, $($args:expr),*) => {{
+macro_rules! abort_call_site {
+    ($fmt:literal, $($args:expr),* $(,)?) => {{
         use $crate::span_error;
 
         let span = $crate::proc_macro2::Span::call_site();
-        span_error!(span, $fmt, $($args),*)
+        abort!(span, $fmt, $($args),*)
     }};
 
-    ($msg:expr) => {{
+    ($msg:expr $(,)?) => {{
         use $crate::span_error;
 
         let span = $crate::proc_macro2::Span::call_site();
-        span_error!(span, $msg)
+        abort!(span, $msg)
     }};
 }
 
@@ -96,12 +103,13 @@ impl MacroError {
         self.span.clone()
     }
 
-    /// Trigger single error, aborting the proc-macro's execution.
+    /// Abort the proc-macro's execution and show the error.
     ///
     /// You're not supposed to use this function directly.
     /// Use [`span_error!`] or [`call_site_error!`] instead.
-    pub fn trigger(self) -> ! {
-        panic!(Payload(self))
+    pub fn abort(self) -> ! {
+        push_error(self);
+        panic!(AbortNow)
     }
 }
 
@@ -140,20 +148,20 @@ impl Display for MacroError {
 impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
     type Ok = T;
 
-    fn unwrap_or_exit(self) -> T {
+    fn unwrap_or_abort(self) -> T {
         match self {
             Ok(res) => res,
-            Err(e) => e.into().trigger(),
+            Err(e) => e.into().abort(),
         }
     }
 
-    fn expect_or_exit(self, message: &str) -> T {
+    fn expect_or_abort(self, message: &str) -> T {
         match self {
             Ok(res) => res,
             Err(e) => {
                 let MacroError { msg, span } = e.into();
                 let msg = format!("{}: {}", message, msg);
-                MacroError::new(span, msg).trigger()
+                MacroError::new(span, msg).abort()
             }
         }
     }
