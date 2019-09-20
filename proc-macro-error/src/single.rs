@@ -4,7 +4,7 @@
 //! see [crate level documentation](crate).
 
 use crate::{
-    ResultExt, AbortNow, multi::push_error
+    ResultExt, AbortNow, multi::push_error, check_correctness
 };
 
 use proc_macro2::{Span, TokenStream};
@@ -57,14 +57,14 @@ macro_rules! abort {
 #[macro_export]
 macro_rules! abort_call_site {
     ($fmt:literal, $($args:expr),* $(,)?) => {{
-        use $crate::span_error;
+        use $crate::abort;
 
         let span = $crate::proc_macro2::Span::call_site();
         abort!(span, $fmt, $($args),*)
     }};
 
     ($msg:expr $(,)?) => {{
-        use $crate::span_error;
+        use $crate::abort;
 
         let span = $crate::proc_macro2::Span::call_site();
         abort!(span, $msg)
@@ -108,6 +108,7 @@ impl MacroError {
     /// You're not supposed to use this function directly.
     /// Use [`span_error!`] or [`call_site_error!`] instead.
     pub fn abort(self) -> ! {
+        check_correctness();
         push_error(self);
         panic!(AbortNow)
     }

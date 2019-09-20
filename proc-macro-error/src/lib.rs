@@ -134,7 +134,12 @@ pub mod single;
 
 pub use dummy::set_dummy;
 pub use single::MacroError;
-pub use multi::trigger_if_dirty;
+pub use multi::abort_if_dirty;
+
+use quote::{quote};
+
+use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// This macro is supposed to be used at the top level of your `proc-macro`,
 /// the function marked with a `#[proc_macro*]` attribute. It catches all the
@@ -147,11 +152,11 @@ pub use multi::trigger_if_dirty;
 ///
 /// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
 #[macro_export]
-macro_rules! filter_macro_errors {
-    ($($code:tt)*) => {
+macro_rules! proc_macro_error {
+    ($($code:tt)*) => {{
         let f = move || -> $crate::proc_macro::TokenStream { $($code)* };
-        $crate::filter_macro_error_panics(f)
-    };
+        $crate::entry_point(f)
+    }};
 }
 
 /// This traits expands [`Result<T, Into<MacroError>>`](std::result::Result) with some handy shortcuts.
@@ -159,13 +164,13 @@ pub trait ResultExt {
     type Ok;
 
     /// Behaves like [`Result::unwrap`]: if self is `Ok` yield the contained value,
-    /// otherwise abort macro execution via [`span_error!`].
-    fn unwrap_or_exit(self) -> Self::Ok;
+    /// otherwise abort macro execution via [`abort!`].
+    fn unwrap_or_abort(self) -> Self::Ok;
 
     /// Behaves like [`Result::expect`]: if self is `Ok` yield the contained value,
     /// otherwise abort macro execution via [`span_error!`].
     /// If it aborts then resulting message will be preceded with `message`.
-    fn expect_or_exit(self, msg: &str) -> Self::Ok;
+    fn expect_or_abort(self, msg: &str) -> Self::Ok;
 }
 
 /// This traits expands [`Option<T>`][std::option::Option] with some handy shortcuts.
@@ -173,43 +178,41 @@ pub trait OptionExt {
     type Some;
 
     /// Behaves like [`Option::expect`]: if self is `Some` yield the contained value,
-    /// otherwise abort macro execution via [`call_site_error!`].
+    /// otherwise abort macro execution via [`abort!`].
     /// If it aborts the `message` will be used for [`compile_error!`][compl_err] invocation.
     ///
     /// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-    fn expect_or_exit(self, msg: &str) -> Self::Some;
+    fn expect_or_abort(self, msg: &str) -> Self::Some;
 }
 
 impl<T> OptionExt for Option<T> {
     type Some = T;
 
-    fn expect_or_exit(self, message: &str) -> T {
+    fn expect_or_abort(self, message: &str) -> T {
         match self {
             Some(res) => res,
-            None => call_site_error!(message),
+            None => abort_call_site!(message),
         }
     }
 }
 
-/// Execute the closure and catch all the panics triggered by
-/// [`single::MacroError::trigger`] and [`multi::MultiMacroErrors::trigger`],
+/// Executes the closure and catches panics if any. Then performs cleanup.
+/// If panic *did* occur - check if it's our's
 /// converting them to [`proc_macro::TokenStream`] instance.
 /// Any panic that is unrelated to this crate will be passed through as is.
 ///
 /// You're not supposed to use this function directly, use [`filter_macro_errors!`]
 /// instead.
 #[doc(hidden)]
-pub fn filter_macro_error_panics<F>(f: F) -> proc_macro::TokenStream
+pub fn entry_point<F>(f: F) -> proc_macro::TokenStream
 where
     F: FnOnce() -> proc_macro::TokenStream,
+    F: UnwindSafe
 {
-    use crate::multi::MultiMacroErrors;
-    use proc_macro2::TokenStream;
-    use quote::{quote, ToTokens};
-    use std::any::Any;
-    use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
+    ENTERED_MACRO.with(|flag| flag.store(true, Ordering::SeqCst));
+    let caught = catch_unwind(f);
+    ENTERED_MACRO.with(|flag| flag.store(false, Ordering::SeqCst));
 
-    let caught = catch_unwind(AssertUnwindSafe(f));
     let dummy = dummy::cleanup();
     let err_storage = multi::cleanup();
 
@@ -223,16 +226,27 @@ where
         }
 
         Err(boxed) => match boxed.downcast::<AbortNow>() {
-            Ok(_) => quote!( #(#err_storage)* #dummy ).into(),
+            Ok(_) => {
+                assert!(!err_storage.is_empty());
+                quote!( #(#err_storage)* #dummy ).into()
+            },
             Err(boxed) => resume_unwind(boxed),
         }
     }
+}
 
+thread_local! {
+    static ENTERED_MACRO: AtomicBool = AtomicBool::new(false);
+}
 
+fn check_correctness() {
+    if !ENTERED_MACRO.with(|flag| flag.load(Ordering::SeqCst)) {
+        panic!("proc-macro-error API cannot be used outside of proc_macro_error! invocation");
+    }
 }
 
 struct AbortNow;
 
 // SAFE: AbortNow is private, a user can't use it to make any harm.
-unsafe impl<T> Send for Payload<T> {}
-unsafe impl<T> Sync for Payload<T> {}
+unsafe impl Send for AbortNow {}
+unsafe impl Sync for AbortNow {}

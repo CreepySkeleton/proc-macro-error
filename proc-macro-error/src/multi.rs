@@ -1,12 +1,10 @@
 //! Facility to stack and emit multiple errors.
 //!
 //!
-use crate::{MacroError, Payload};
+
+use crate::{MacroError, AbortNow, check_correctness};
 
 use std::cell::RefCell;
-
-use proc_macro2::TokenStream;
-use quote::ToTokens;
 
 thread_local! {
     static ERR_STORAGE: RefCell<Vec<MacroError>> = RefCell::new(Vec::new());
@@ -47,10 +45,10 @@ macro_rules! emit_call_site_error {
     }};
 
     ($msg:expr) => {{
-        use $crate::push_span_error;
+        use $crate::emit_error;
 
         let span = $crate::proc_macro2::Span::call_site();
-        push_span_error!(span, $msg)
+        emit_error!(span, $msg)
     }};
 }
 
@@ -72,6 +70,7 @@ pub fn cleanup() -> Vec<MacroError> {
 
 /// Abort macro execution and show errors if global error storage is not empty.
 pub fn abort_if_dirty() {
+    check_correctness();
     ERR_STORAGE.with(|storage| {
         if !storage.borrow().is_empty() {
             panic!(AbortNow)
@@ -85,5 +84,6 @@ pub fn abort_if_dirty() {
 /// [`push_span_error!`] instead.
 #[doc(hidden)]
 pub fn push_error(error: MacroError) {
+    check_correctness();
     ERR_STORAGE.with(|storage| storage.borrow_mut().push(error))
 }

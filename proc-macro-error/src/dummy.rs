@@ -108,6 +108,8 @@
 use proc_macro2::TokenStream;
 use std::cell::Cell;
 
+use crate::check_correctness;
+
 thread_local! {
     pub(crate) static DUMMY_IMPL: Cell<Option<TokenStream>> = Cell::new(None);
 }
@@ -125,6 +127,7 @@ thread_local! {
 /// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
 /// ```
 pub fn set_dummy(dummy: TokenStream) -> Option<TokenStream> {
+    check_correctness();
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(Some(dummy)))
 }
 
