@@ -131,9 +131,9 @@ pub mod dummy;
 pub mod multi;
 pub mod single;
 
-pub use dummy::set_dummy;
-pub use single::MacroError;
-pub use multi::abort_if_dirty;
+pub use self::dummy::set_dummy;
+pub use self::single::MacroError;
+pub use self::multi::abort_if_dirty;
 
 use quote::{quote};
 
@@ -185,7 +185,8 @@ impl<T> OptionExt for Option<T> {
 /// See the [module-level documentation](self) for usage example
 pub fn entry_point<F>(f: F) -> proc_macro::TokenStream
 where
-    F: FnOnce() -> proc_macro::TokenStream + UnwindSafe,
+    F: FnOnce() -> proc_macro::TokenStream,
+    F: UnwindSafe
 {
     ENTERED_ENTRY_POINT.with(|flag| flag.store(true, Ordering::SeqCst));
     let caught = catch_unwind(f);

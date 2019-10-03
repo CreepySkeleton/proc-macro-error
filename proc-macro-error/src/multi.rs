@@ -19,7 +19,7 @@ thread_local! {
 /// If a panic occurs somewhere in your macro no errors will be shown.
 #[macro_export]
 macro_rules! emit_error {
-    ($span:expr, $fmt:literal, $($args:expr),*) => {{
+    ($span:expr, $fmt:expr, $($args:expr),*) => {{
         use $crate::macro_error;
 
         let err = macro_error!($span, $fmt, $($args),*);
@@ -41,7 +41,7 @@ macro_rules! emit_error {
 /// is still preferable over plain panic, see [Motivation](#motivation)
 #[macro_export]
 macro_rules! emit_call_site_error {
-    ($fmt:literal, $($args:expr),*) => {{
+    ($fmt:expr, $($args:expr),*) => {{
         use $crate::push_span_error;
 
         let span = $crate::proc_macro2::Span::call_site();

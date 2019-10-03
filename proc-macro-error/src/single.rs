@@ -20,13 +20,13 @@ use std::{
 /// Shortcut for `MacroError::new($span.into(), format!($fmt, $args...))`
 #[macro_export]
 macro_rules! macro_error {
-    ($span:expr, $fmt:literal, $($args:expr),+ $(,)?) => {{
+    ($span:expr, $fmt:expr, $($args:expr),+) => {{
         let msg = format!($fmt, $($args),*);
         let span = $span.into();
         $crate::MacroError::new(span, msg)
     }};
 
-    ($span:expr, $msg:expr $(,)?) => {{
+    ($span:expr, $msg:expr) => {{
         $crate::MacroError::new($span.into(), $msg.to_string())
     }};
 }
@@ -54,31 +54,31 @@ macro_rules! macro_error {
 ///
 #[macro_export]
 macro_rules! abort {
-    ($span:expr, $fmt:literal, $($args:expr),* $(,)?) => {{
+    ($span:expr, $fmt:expr, $($args:expr),*) => {{
         use $crate::macro_error;
         macro_error!($span, $fmt, $($args),*).abort()
     }};
 
-    ($span:expr, $msg:expr $(,)?) => {{
+    ($span:expr, $msg:expr) => {{
         use $crate::macro_error;
         macro_error!($span, $msg).abort()
     }};
 
-    ($err:expr $(,)?) => { $crate::MacroError::from($err).abort() };
+    ($err:expr) => { $crate::MacroError::from($err).abort() };
 }
 
 /// Shortcut for `abort!(Span::call_site(), msg...)`. This macro
 /// is still preferable over plain panic, see [Motivation](#motivation)
 #[macro_export]
 macro_rules! abort_call_site {
-    ($fmt:literal, $($args:expr),* $(,)?) => {{
+    ($fmt:expr, $($args:expr),*) => {{
         use $crate::abort;
 
         let span = $crate::proc_macro2::Span::call_site();
         abort!(span, $fmt, $($args),*)
     }};
 
-    ($msg:expr $(,)?) => {{
+    ($msg:expr) => {{
         use $crate::abort;
 
         let span = $crate::proc_macro2::Span::call_site();

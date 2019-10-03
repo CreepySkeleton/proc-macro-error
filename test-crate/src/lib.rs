@@ -1,14 +1,25 @@
+#[macro_use]
+extern crate proc_macro_error;
+#[macro_use]
+extern crate syn;
+extern crate proc_macro;
+
+use std::panic::AssertUnwindSafe;
 use proc_macro2::Span;
-use proc_macro_error::*;
-use quote::quote;
-use syn::token::*;
 use syn::{
+    Ident,
     parse::{Parse, ParseStream},
-    parse_macro_input,
+    token::Underscore,
     punctuated::Punctuated,
-    spanned::Spanned,
-    Ident, Result, Token,
+    spanned::Spanned
 };
+use proc_macro_error::{
+    entry_point,
+    set_dummy,
+    ResultExt,
+    OptionExt,
+};
+
 
 struct IdentOrUnderscore {
     span: Span,
@@ -22,7 +33,7 @@ impl IdentOrUnderscore {
 }
 
 impl Parse for IdentOrUnderscore {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
         let la = input.lookahead1();
 
         if la.peek(Ident) {
@@ -40,7 +51,7 @@ impl Parse for IdentOrUnderscore {
 struct Args(Vec<IdentOrUnderscore>);
 
 impl Parse for Args {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
         let args = Punctuated::<_, Token![,]>::parse_terminated(input)?;
         Ok(Args(args.into_iter().collect()))
     }
@@ -48,7 +59,8 @@ impl Parse for Args {
 
 #[proc_macro]
 pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    entry_point(|| {
+    // FIXME: proc_macro::TokenStream does not implement UnwindSafe until 1.37.0
+    entry_point(AssertUnwindSafe(|| {
         let mut name = String::new();
 
         let input = parse_macro_input!(input as Args);
@@ -102,5 +114,5 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         let name = Ident::new(&name, Span::call_site());
         quote!( fn #name() {} ).into()
-    })
+    }))
 }
