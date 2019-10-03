@@ -1,7 +1,0 @@
-error: proc macro panicked
- --> $DIR/unrelated_panic.rs:5:1
-  |
-5 | make_fn!();
-  | ^^^^^^^^^^^
-  |
-  = help: message: empty name

@@ -1,5 +1,0 @@
-error: Result::expect_or_exit() test: error
- --> $DIR/result_expect.rs:5:10
-  |
-5 | make_fn!(result_expect);
-  |          ^^^^^^^^^^^^^

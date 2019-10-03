@@ -9,7 +9,6 @@
 //!
 //! Your errors look like
 //! ```text
-
 //!
 //! ### Singe error usage
 //! ```rust,ignore
@@ -141,23 +140,6 @@ use quote::{quote};
 use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
 use std::sync::atomic::{AtomicBool, Ordering};
 
-/// This macro is supposed to be used at the top level of your `proc-macro`,
-/// the function marked with a `#[proc_macro*]` attribute. It catches all the
-/// errors triggered by [`span_error!`], [`call_site_error!`], [`MacroError::trigger`]
-/// and [`MultiMacroErrors`].
-/// Once caught, it converts it to a [`proc_macro::TokenStream`]
-/// containing a [`compile_error!`][compl_err] invocation.
-///
-/// See the [module-level documentation](self) for usage example
-///
-/// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-#[macro_export]
-macro_rules! proc_macro_error {
-    ($($code:tt)*) => {{
-        let f = move || -> $crate::proc_macro::TokenStream { $($code)* };
-        $crate::entry_point(f)
-    }};
-}
 
 /// This traits expands [`Result<T, Into<MacroError>>`](std::result::Result) with some handy shortcuts.
 pub trait ResultExt {
@@ -168,8 +150,8 @@ pub trait ResultExt {
     fn unwrap_or_abort(self) -> Self::Ok;
 
     /// Behaves like [`Result::expect`]: if self is `Ok` yield the contained value,
-    /// otherwise abort macro execution via [`span_error!`].
-    /// If it aborts then resulting message will be preceded with `message`.
+    /// otherwise abort macro execution via [`abort!`].
+    /// If it aborts then resulting error message will be preceded with `message`.
     fn expect_or_abort(self, msg: &str) -> Self::Ok;
 }
 
@@ -178,7 +160,7 @@ pub trait OptionExt {
     type Some;
 
     /// Behaves like [`Option::expect`]: if self is `Some` yield the contained value,
-    /// otherwise abort macro execution via [`abort!`].
+    /// otherwise abort macro execution via [`abort_call_site!`].
     /// If it aborts the `message` will be used for [`compile_error!`][compl_err] invocation.
     ///
     /// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
@@ -196,25 +178,20 @@ impl<T> OptionExt for Option<T> {
     }
 }
 
-/// Executes the closure and catches panics if any. Then performs cleanup.
-/// If panic *did* occur - check if it's our's
-/// converting them to [`proc_macro::TokenStream`] instance.
-/// Any panic that is unrelated to this crate will be passed through as is.
+/// This macro **MUST** be placed at the top level of your procedural macro,
+/// inside the function marked with a `#[proc_macro*]` attribute. All the
+/// error emitting related API can be used only inside this macro invocation.
 ///
-/// You're not supposed to use this function directly, use [`filter_macro_errors!`]
-/// instead.
-#[doc(hidden)]
+/// See the [module-level documentation](self) for usage example
 pub fn entry_point<F>(f: F) -> proc_macro::TokenStream
 where
-    F: FnOnce() -> proc_macro::TokenStream,
-    F: UnwindSafe
+    F: FnOnce() -> proc_macro::TokenStream + UnwindSafe,
 {
-    ENTERED_MACRO.with(|flag| flag.store(true, Ordering::SeqCst));
+    ENTERED_ENTRY_POINT.with(|flag| flag.store(true, Ordering::SeqCst));
     let caught = catch_unwind(f);
-    ENTERED_MACRO.with(|flag| flag.store(false, Ordering::SeqCst));
-
     let dummy = dummy::cleanup();
     let err_storage = multi::cleanup();
+    ENTERED_ENTRY_POINT.with(|flag| flag.store(false, Ordering::SeqCst));
 
     match caught {
         Ok(ts) => {
@@ -236,17 +213,13 @@ where
 }
 
 thread_local! {
-    static ENTERED_MACRO: AtomicBool = AtomicBool::new(false);
-}
-
-fn check_correctness() {
-    if !ENTERED_MACRO.with(|flag| flag.load(Ordering::SeqCst)) {
-        panic!("proc-macro-error API cannot be used outside of proc_macro_error! invocation");
-    }
+    static ENTERED_ENTRY_POINT: AtomicBool = AtomicBool::new(false);
 }
 
 struct AbortNow;
 
-// SAFE: AbortNow is private, a user can't use it to make any harm.
-unsafe impl Send for AbortNow {}
-unsafe impl Sync for AbortNow {}
+fn check_correctness() {
+    if !ENTERED_ENTRY_POINT.with(|flag| flag.load(Ordering::SeqCst)) {
+        panic!("proc-macro-error API cannot be used outside of proc_macro_error! invocation");
+    }
+}

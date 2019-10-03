@@ -1,5 +1,0 @@
-error: span_error! 2 args test
- --> $DIR/span_two.rs:5:10
-  |
-5 | make_fn!(span_two);
-  |          ^^^^^^^^

@@ -48,55 +48,48 @@ impl Parse for Args {
 
 #[proc_macro]
 pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    filter_macro_errors! {
+    entry_point(|| {
         let mut name = String::new();
 
         let input = parse_macro_input!(input as Args);
 
         for arg in input.0 {
             match &*arg.part {
-                "span_many" => span_error!(arg.span, "span_error! 3{} args {}", "+", "test"),
-                "span_two" => span_error!(arg.span, "span_error! 2 args test"),
-                "span_single" => {
-                    let e = MacroError::new(arg.span, "span_error! single-arg test".into());
-                    span_error!(e)
-                },
+                "abort" => abort!(arg.span, "abort! 3{} args {}", "+", "test"),
 
-                "call_site_many" => call_site_error!("call_site_error! 2{} args {}", "+", "test"),
-                "call_site_single" => call_site_error!("call_site_error! single-arg test"),
+                "abort_call_site" => abort_call_site!("abort_call_site! 2{} args {}", "+", "test"),
 
-                "trigger" => MacroError::new(
-                        arg.span,
-                        format!("direct MacroError::trigger() test - {}", arg.part))
-                    .trigger(),
+                "direct_abort" =>
+                    macro_error!(arg.span, "direct MacroError::abort() test").abort(),
 
                 "result_expect" => {
                     let e = syn::Error::new(arg.span, "error");
-                    Err(e).expect_or_exit("Result::expect_or_exit() test")
+                    Err(e).expect_or_abort("Result::expect_or_abort() test")
                 },
 
                 "result_unwrap" => {
-                    let e = syn::Error::new(arg.span, "Result::unwrap_or_exit() test");
-                    Err(e).unwrap_or_exit()
+                    let e = syn::Error::new(arg.span, "Result::unwrap_or_abort() test");
+                    Err(e).unwrap_or_abort()
                 },
 
                 "option_expect" => {
-                    None.expect_or_exit("Option::expect_or_exit() test")
+                    None.expect_or_abort("Option::expect_or_abort() test")
                 },
 
                 "need_default" => {
-                    set_dummy(Some(quote! {
+                    set_dummy(quote! {
                         impl Default for NeedDefault {
                             fn default() -> Self {
                                 NeedDefault::A
                             }
                         }
-                    }));
+                    });
 
-                    span_error!(arg.span, "set_dummy test")
+                    abort!(arg.span, "set_dummy test")
                 },
 
-                part if part.starts_with("multi") => push_span_error!(arg.span, "multiple error part: {}", part),
+                part if part.starts_with("multi") =>
+                    emit_error!(arg.span, "multiple error part: {}", part),
 
                 _ => name.push_str(&arg.part),
             }
@@ -104,10 +97,10 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         // test that all the panics from another source are not to be caught
         if name.is_empty() {
-            panic!("empty name")
+            panic!("unrelated panic test")
         }
 
         let name = Ident::new(&name, Span::call_site());
         quote!( fn #name() {} ).into()
-    }
+    })
 }

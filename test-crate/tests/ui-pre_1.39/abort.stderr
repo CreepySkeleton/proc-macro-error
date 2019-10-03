@@ -1,0 +1,5 @@
+error: abort! 3+ args test
+ --> $DIR/abort.rs:4:10
+  |
+4 | make_fn!(abort);
+  |          ^^^^^

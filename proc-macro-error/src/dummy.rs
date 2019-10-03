@@ -16,7 +16,7 @@
 //! #[proc_macro_derive(MyTrait)]
 //! fn example(input: TokenStream) -> TokenStream {
 //!     // somewhere deep inside
-//!     span_error!(span, "something's wrong");
+//!     abort!(span, "something's wrong");
 //!
 //!     // this implementation will be generated if no error happened
 //!     quote! {
@@ -115,33 +115,14 @@ thread_local! {
 }
 
 /// Sets dummy token stream which will be appended to `compile_error!(msg);...`
-/// invocations, should a trigger happen and/or global error storage would
-/// appear not to be empty. Returns an old dummy, if set.
+/// invocations in case you'll emit any errors.
 ///
-/// # Warning:
-/// If you do `set_dummy(ts)` you **must** do `cleanup()`
-/// before macro execution completes ([`filer_macro_errors!`] does it for you)!
-/// Otherwise `rustc` will fail with cryptic
-/// ```text
-/// thread 'rustc' panicked at 'use-after-free in `proc_macro` handle', src\libcore\option.rs:1166:5
-/// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
-/// ```
+/// See [module level docs for usage example][self].
 pub fn set_dummy(dummy: TokenStream) -> Option<TokenStream> {
     check_correctness();
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(Some(dummy)))
 }
 
-/// Clear the global error storage, returning the old dummy, if present.
-///
-/// # Warning:
-/// You **must** do it before macro execution completes
-/// ([`filter_macro_errors!`] does it for you)! If dummy
-/// is set at the end moment of macro execution `rustc` will fail with cryptic
-///
-/// ```text
-/// thread 'rustc' panicked at 'use-after-free in `proc_macro` handle', src\libcore\option.rs:1166:5
-/// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
-/// ```
-pub fn cleanup() -> Option<TokenStream> {
+pub(crate) fn cleanup() -> Option<TokenStream> {
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(None))
 }

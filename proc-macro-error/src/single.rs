@@ -4,7 +4,9 @@
 //! see [crate level documentation](crate).
 
 use crate::{
-    ResultExt, AbortNow, multi::push_error, check_correctness
+    ResultExt,
+    check_correctness,
+    multi::{push_error, abort_if_dirty},
 };
 
 use proc_macro2::{Span, TokenStream};
@@ -15,9 +17,21 @@ use std::{
     fmt::{Display, Formatter}
 };
 
+/// Shortcut for `MacroError::new($span.into(), format!($fmt, $args...))`
+#[macro_export]
+macro_rules! macro_error {
+    ($span:expr, $fmt:literal, $($args:expr),+ $(,)?) => {{
+        let msg = format!($fmt, $($args),*);
+        let span = $span.into();
+        $crate::MacroError::new(span, msg)
+    }};
 
-/// Makes a [`MacroError`] instance from provided arguments (`panic!`-like)
-/// and triggers panic in hope it will be caught by [`filter_macro_errors!`].
+    ($span:expr, $msg:expr $(,)?) => {{
+        $crate::MacroError::new($span.into(), $msg.to_string())
+    }};
+}
+
+/// Makes a [`MacroError`] instance from provided arguments and aborts showing it.
 ///
 /// # Syntax
 ///
@@ -26,34 +40,35 @@ use std::{
 ///
 /// 1. "panic-format-like" form: `abort!(span_expr, format_str_literal [, format_args...])
 ///
-///     First argument is a span, all the rest gets passed to [`format!`] to build the error message.
+///     First argument is a span, all the rest is passed to [`format!`] to build the error message.
 ///
 /// 2. "panic-single-arg-like" form: `abort!(span_expr, error_expr)`
 ///
 ///     First argument is a span, the second is the error message, it must implement [`ToString`].
 ///
-/// 3. "MacroError::trigger-like" form: abort!(error_expr)`
+/// 3. `MacroError::abort`-like form: `abort!(error_expr)`
 ///
-///     Literally `MacroError::from(arg).abort()`. It's here just for convenience so [`span_error!`]
+///     Literally `MacroError::from(arg).abort()`. It's here just for convenience so [`abort!`]
 ///     can be used with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`]
 ///     and so on...
 ///
 #[macro_export]
 macro_rules! abort {
     ($span:expr, $fmt:literal, $($args:expr),* $(,)?) => {{
-        let msg = format!($fmt, $($args),*);
-        $crate::MacroError::new($span.into(), msg).abort()
+        use $crate::macro_error;
+        macro_error!($span, $fmt, $($args),*).abort()
     }};
 
     ($span:expr, $msg:expr $(,)?) => {{
-        $crate::MacroError::new($span.into(), $msg.to_string()).abort()
+        use $crate::macro_error;
+        macro_error!($span, $msg).abort()
     }};
 
     ($err:expr $(,)?) => { $crate::MacroError::from($err).abort() };
 }
 
 /// Shortcut for `abort!(Span::call_site(), msg...)`. This macro
-/// is still preferable over plain panic, see [Motivation](#motivation-and-getting-started)
+/// is still preferable over plain panic, see [Motivation](#motivation)
 #[macro_export]
 macro_rules! abort_call_site {
     ($fmt:literal, $($args:expr),* $(,)?) => {{
@@ -71,11 +86,7 @@ macro_rules! abort_call_site {
     }};
 }
 
-/// An single error in a proc-macro. This struct preserves
-/// the given span so `rustc` can highlight the exact place in user code
-/// responsible for the error.
-///
-/// You're not supposed to use this type directly, use [`span_error!`] and [`call_site_error!`].
+/// An single error message in a proc macro with span info attached.
 #[derive(Debug)]
 pub struct MacroError {
     pub(crate) span: Span,
@@ -93,9 +104,14 @@ impl MacroError {
         MacroError::new(Span::call_site(), msg)
     }
 
-    /// Abandon the old span and replace it with the given one.
+    /// Replace the error message with `msg`. Returns old message.
+    pub fn set_message(&mut self, msg: String) -> String {
+        std::mem::replace(&mut self.msg, msg.to_string())
+    }
+
+    /// Replace the span info with `span`. Returns old span.
     pub fn set_span(&mut self, span: Span) {
-        self.span = span;
+        std::mem::replace(&mut self.span, span);
     }
 
     /// Get the span contained.
@@ -110,7 +126,8 @@ impl MacroError {
     pub fn abort(self) -> ! {
         check_correctness();
         push_error(self);
-        panic!(AbortNow)
+        abort_if_dirty();
+        unreachable!()
     }
 }
 

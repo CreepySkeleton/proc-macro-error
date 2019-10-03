@@ -1,5 +1,0 @@
-error: call_site_error! single-arg test
- --> $DIR/call_site_single.rs:5:1
-  |
-5 | make_fn!(call_site_single);
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
