@@ -4,7 +4,6 @@ extern crate proc_macro_error;
 extern crate syn;
 extern crate proc_macro;
 
-use std::panic::AssertUnwindSafe;
 use proc_macro2::Span;
 use syn::{
     Ident,
@@ -14,7 +13,7 @@ use syn::{
     spanned::Spanned
 };
 use proc_macro_error::{
-    entry_point,
+    proc_macro_error,
     set_dummy,
     ResultExt,
     OptionExt,
@@ -58,61 +57,59 @@ impl Parse for Args {
 }
 
 #[proc_macro]
+#[proc_macro_error]
 pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    // FIXME: proc_macro::TokenStream does not implement UnwindSafe until 1.37.0
-    entry_point(AssertUnwindSafe(|| {
-        let mut name = String::new();
+    let mut name = String::new();
+    let input = parse_macro_input!(input as Args);
 
-        let input = parse_macro_input!(input as Args);
+    for arg in input.0 {
+        match &*arg.part {
+            "abort" => abort!(arg.span, "abort! 3{} args {}", "+", "test"),
 
-        for arg in input.0 {
-            match &*arg.part {
-                "abort" => abort!(arg.span, "abort! 3{} args {}", "+", "test"),
+            "abort_call_site" => abort_call_site!("abort_call_site! 2{} args {}", "+", "test"),
 
-                "abort_call_site" => abort_call_site!("abort_call_site! 2{} args {}", "+", "test"),
+            "direct_abort" =>
+                macro_error!(arg.span, "direct MacroError::abort() test").abort(),
 
-                "direct_abort" =>
-                    macro_error!(arg.span, "direct MacroError::abort() test").abort(),
+            "result_expect" => {
+                let e = syn::Error::new(arg.span, "error");
+                Err(e).expect_or_abort("Result::expect_or_abort() test")
+            },
 
-                "result_expect" => {
-                    let e = syn::Error::new(arg.span, "error");
-                    Err(e).expect_or_abort("Result::expect_or_abort() test")
-                },
+            "result_unwrap" => {
+                let e = syn::Error::new(arg.span, "Result::unwrap_or_abort() test");
+                Err(e).unwrap_or_abort()
+            },
 
-                "result_unwrap" => {
-                    let e = syn::Error::new(arg.span, "Result::unwrap_or_abort() test");
-                    Err(e).unwrap_or_abort()
-                },
+            "option_expect" => {
+                None.expect_or_abort("Option::expect_or_abort() test")
+            },
 
-                "option_expect" => {
-                    None.expect_or_abort("Option::expect_or_abort() test")
-                },
-
-                "need_default" => {
-                    set_dummy(quote! {
-                        impl Default for NeedDefault {
-                            fn default() -> Self {
-                                NeedDefault::A
-                            }
+            "need_default" => {
+                set_dummy(quote! {
+                    impl Default for NeedDefault {
+                        fn default() -> Self {
+                            NeedDefault::A
                         }
-                    });
+                    }
+                });
 
-                    abort!(arg.span, "set_dummy test")
-                },
+                abort!(arg.span, "set_dummy test")
+            },
 
-                part if part.starts_with("multi") =>
-                    emit_error!(arg.span, "multiple error part: {}", part),
+            part if part.starts_with("multi") =>
+                emit_error!(arg.span, "multiple error part: {}", part),
 
-                _ => name.push_str(&arg.part),
-            }
+            _ => name.push_str(&arg.part),
         }
+    }
 
-        // test that all the panics from another source are not to be caught
-        if name.is_empty() {
-            panic!("unrelated panic test")
-        }
+    // test that all the panics from another source are not to be caught
+    if name.is_empty() {
+        panic!("unrelated panic test")
+    }
 
-        let name = Ident::new(&name, Span::call_site());
-        quote!( fn #name() {} ).into()
-    }))
+    let name = Ident::new(&name, Span::call_site());
+    quote!( fn #name() {} ).into()
+
 }

@@ -105,7 +105,7 @@ Please note that **this crate is not intended to be used in any other way
 than a proc-macro error reporting**, use `Result` and `?` for normal error processing.
 
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-[`proc_macro::Diagnostics`](https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
+[`proc_macro::Diagnostics`]: (https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
 
 [crate::dummy]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/dummy/index.html
 [crate::multi]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/multi/index.html

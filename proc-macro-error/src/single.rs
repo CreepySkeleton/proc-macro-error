@@ -178,8 +178,7 @@ impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
             Ok(res) => res,
             Err(e) => {
                 let MacroError { msg, span } = e.into();
-                let msg = format!("{}: {}", message, msg);
-                MacroError::new(span, msg).abort()
+                abort!(span, "{}: {}", message, msg);
             }
         }
     }

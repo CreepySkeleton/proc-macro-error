@@ -134,6 +134,7 @@ pub mod single;
 pub use self::dummy::set_dummy;
 pub use self::single::MacroError;
 pub use self::multi::abort_if_dirty;
+pub use proc_macro_error_attr::proc_macro_error;
 
 use quote::{quote};
 
@@ -221,6 +222,6 @@ struct AbortNow;
 
 fn check_correctness() {
     if !ENTERED_ENTRY_POINT.with(|flag| flag.load(Ordering::SeqCst)) {
-        panic!("proc-macro-error API cannot be used outside of proc_macro_error! invocation");
+        panic!("proc-macro-error API cannot be used outside of `entry_point` invocation. Perhaps you forgot to annotate your #[proc_macro] function with `#[proc_macro_error]");
     }
 }

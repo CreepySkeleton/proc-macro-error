@@ -1,0 +1,17 @@
+[package]
+name = "proc-macro-error-attr"
+version = "0.1.0"
+authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1"
+syn = { version = "1", features = ["full"] }
+version_check = "0.9"
+
+[dev-dependencies]
+trybuild = "1.0"
