@@ -1,3 +1,17 @@
+# [Upcoming]
+
+## The crate has been completely rewritten from scratch!
+
+## Changes (most are breaking):
+* Renamed macros:
+  * `span_error` => `abort`
+  * `call_site_error` => `abort_call_site`
+* `filter_macro_errors` was replaced by `#[proc_macro_error]` attribute.
+* `set_dummy` now takes `TokenStream` instead of `Option<TokenStream>`
+* Support for multiple errors via `emit_error` and `emit_call_site_error`
+* New `macro_error` macro for building errors in format=like style.
+* `MacroError` API had been reconsidered. It also now implements `quote::ToTokens`.
+
 # v0.2.6 (2019-09-02)
 * Introduce support for dummy implementations via `dummy::set_dummy`
 * `multi::*` is now deprecated, will be completely rewritten in v0.3

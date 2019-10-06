@@ -21,6 +21,10 @@ thread_local! {
 /// of `compile_error!` invocations after the execution hits the end
 /// of the function marked with `[proc_macro_error]` or the lambda passed to [`entry_point`].
 ///
+/// # Syntax
+///
+/// The same as [`abort!`].
+///
 /// # Note:
 /// If a panic occurs somewhere in your macro no errors will be shown.
 #[macro_export]

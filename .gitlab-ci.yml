@@ -1,7 +1,7 @@
 stages:
   - docker
   - test
-  
+
 docker:
   only:
     - schedules
@@ -27,7 +27,7 @@ docker:
     - rustup --version
     - rustc --version
     - cargo --version
-  
+
 
 test-stable:
   <<: *rust_test_template
@@ -35,7 +35,7 @@ test-stable:
     - cargo test --all
   variables:
     RUSTUP_TOOLCHAIN: stable
-    
+
 test-beta:
   <<: *rust_test_template
   script:
@@ -53,10 +53,10 @@ test-nightly:
 test-1.31.0:
   <<: *rust_test_template
   script:
-    - cargo test --tests 
+    - cargo test --tests
   variables:
     RUSTUP_TOOLCHAIN: nightly
-    
+
 test-fmt:
   <<: *rust_test_template
   variables:
@@ -64,5 +64,5 @@ test-fmt:
   script:
     - rustup component add rustfmt
     - cargo fmt --all -- --check
-    
+
 
