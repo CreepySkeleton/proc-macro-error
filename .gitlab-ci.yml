@@ -1,0 +1,67 @@
+stages:
+  - docker
+  - test
+  
+docker:
+  only:
+    - schedules
+  image: docker:latest
+  services:
+    - docker:dind
+  stage: docker
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - cd ci/docker/rust
+    - docker build --no-cache -t registry.gitlab.com/dzamlo/gitlab-ci-rust-test/rust:latest .
+    - docker push registry.gitlab.com/dzamlo/gitlab-ci-rust-test/rust:latest
+
+.rust_test_template: &rust_test_template
+  stage: test
+  image: "registry.gitlab.com/dzamlo/gitlab-ci-rust-test/rust:latest"
+  cache:
+    paths:
+      - cargo/
+      - target/
+  before_script:
+    - export CARGO_HOME="$CI_PROJECT_DIR/cargo"
+    - rustup --version
+    - rustc --version
+    - cargo --version
+  
+
+test-stable:
+  <<: *rust_test_template
+  script:
+    - cargo test --all
+  variables:
+    RUSTUP_TOOLCHAIN: stable
+    
+test-beta:
+  <<: *rust_test_template
+  script:
+    - cargo test --all
+  variables:
+    RUSTUP_TOOLCHAIN: beta
+
+test-nightly:
+  <<: *rust_test_template
+  script:
+    - cargo test --all
+  variables:
+    RUSTUP_TOOLCHAIN: nightly
+
+test-1.31.0:
+  <<: *rust_test_template
+  script:
+    - cargo test --tests 
+  variables:
+    RUSTUP_TOOLCHAIN: nightly
+    
+test-fmt:
+  <<: *rust_test_template
+  variables:
+    RUSTUP_TOOLCHAIN: stable
+  script:
+    - cargo fmt --all --verbose -- --write-mode=diff
+    
+
