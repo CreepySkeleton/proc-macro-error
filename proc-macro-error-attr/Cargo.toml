@@ -1,8 +1,11 @@
 [package]
 name = "proc-macro-error-attr"
-version = "0.1.0"
+version = "0.3.0-rc1"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 edition = "2018"
+description = "attribute macro for proc-macro-error crate"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/CreepySkeleton/proc-macro-error"
 
 [lib]
 proc-macro = true
