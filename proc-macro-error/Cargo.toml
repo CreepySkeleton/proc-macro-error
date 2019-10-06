@@ -20,9 +20,6 @@ no-dev-version = true
 [badges]
 maintenance = { status = "actively-developed" }
 
-[features]
-dummy = []
-
 [dependencies]
 quote = "1"
 proc-macro2 = "1"

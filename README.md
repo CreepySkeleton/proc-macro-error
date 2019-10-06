@@ -37,27 +37,15 @@ This is exactly what this crate is built for!!!
 ### Panic-like usage
 
 ```rust
-# fn some_logic(_input: &DeriveInput) -> Result<(), Dummy> { unimplemented!() }
-# fn more_logic(_input: &DeriveInput) -> Result<(), Dummy> { unimplemented!() }
-# fn more_logic_for_logic_god(_input: &DeriveInput) -> bool { unimplemented!() }
-# struct Dummy {
-#     span: proc_macro2::Span,
-#     msg: String
-# }
-# impl Into<MacroError> for Dummy {
-#     fn into(self) -> MacroError { unimplemented!() }
-# }
 use proc_macro_error::*;
 use proc_macro::TokenStream;
 use syn::{DeriveInput, parse_macro_input};
 use quote::quote;
 
-# static _IGNORE: &str = "
 // This is your main entry point
 #[proc_macro]
 // this attribute *MUST* be placed on top of the #[proc_macro] function
 #[proc_macro_error]
-# ";
 pub fn make_answer(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -110,10 +98,8 @@ fn process_fields(_attrs: &Fields) -> Vec<TokenStream> {
     unimplemented!()
 }
 
-# static _IGNORE: &str = "
 #[proc_macro]
 #[proc_macro_error]
-# ";
 pub fn make_answer(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
     let attrs = process_attrs(&input.attrs);
@@ -185,6 +171,5 @@ than a proc-macro error reporting**, use `Result` and `?` for anything else.
 [crate::dummy]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/dummy/index.html
 [crate::multi]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/multi/index.html
 
-[`filter_macro_errors!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.filter_macro_errors.html
-[`call_site_error!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.call_site_error.html
-[`span_error!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.span_error.html
+[`abort_call_site!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.abort_call_site.html
+[`abort!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.abort.html
