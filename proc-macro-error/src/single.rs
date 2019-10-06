@@ -1,6 +1,6 @@
 //! This module contains data types and functions to be used for single-error reporting.
 //!
-//! These are supposed to be used through [`span_error!`] and [`call_site_error!`],
+//! These are supposed to be used through [`abort!`] and [`abort_call_site!`],
 //! see [crate level documentation](crate).
 
 use crate::{
@@ -116,7 +116,7 @@ impl MacroError {
 
     /// Get the span contained.
     pub fn span(&self) -> Span {
-        self.span.clone()
+        self.span
     }
 
     /// Abort the proc-macro's execution and show the error.
@@ -152,7 +152,7 @@ impl From<&str> for MacroError {
 impl ToTokens for MacroError {
     fn to_tokens(&self, ts: &mut TokenStream) {
         let MacroError { ref msg, ref span } = *self;
-        let msg = syn::LitStr::new(msg, span.clone());
+        let msg = syn::LitStr::new(msg, *span);
         ts.extend(quote_spanned!(*span=> compile_error!(#msg); ));
     }
 }

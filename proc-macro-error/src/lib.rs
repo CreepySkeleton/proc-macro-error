@@ -240,8 +240,7 @@ impl<T> OptionExt for Option<T> {
 /// Typically, you use `#[proc_macro_error]` instead, see [module level docs][self].
 pub fn entry_point<F>(f: F) -> proc_macro::TokenStream
 where
-    F: FnOnce() -> proc_macro::TokenStream,
-    F: UnwindSafe,
+    F: FnOnce() -> proc_macro::TokenStream + UnwindSafe,
 {
     ENTERED_ENTRY_POINT.with(|flag| flag.store(true, Ordering::SeqCst));
     let caught = catch_unwind(f);
