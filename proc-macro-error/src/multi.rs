@@ -7,7 +7,7 @@
 //!
 //! The [`emit_error!`] and [`emit_call_site_error!`] macros are just for it!
 
-use crate::{MacroError, AbortNow, check_correctness};
+use crate::{check_correctness, AbortNow, MacroError};
 
 use std::cell::RefCell;
 

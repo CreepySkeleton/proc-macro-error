@@ -4,9 +4,9 @@
 //! see [crate level documentation](crate).
 
 use crate::{
-    ResultExt,
     check_correctness,
-    multi::{push_error, abort_if_dirty},
+    multi::{abort_if_dirty, push_error},
+    ResultExt,
 };
 
 use proc_macro2::{Span, TokenStream};
@@ -14,7 +14,7 @@ use quote::{quote_spanned, ToTokens};
 
 use std::{
     convert::{AsMut, AsRef},
-    fmt::{Display, Formatter}
+    fmt::{Display, Formatter},
 };
 
 /// Shortcut for `MacroError::new($span.into(), format!($fmt, $args...))`

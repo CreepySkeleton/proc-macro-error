@@ -187,15 +187,14 @@ pub mod multi;
 pub mod single;
 
 pub use self::dummy::set_dummy;
-pub use self::single::MacroError;
 pub use self::multi::abort_if_dirty;
+pub use self::single::MacroError;
 pub use proc_macro_error_attr::proc_macro_error;
 
-use quote::{quote};
+use quote::quote;
 
 use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
 use std::sync::atomic::{AtomicBool, Ordering};
-
 
 /// This traits expands [`Result<T, Into<MacroError>>`](std::result::Result) with some handy shortcuts.
 pub trait ResultExt {
@@ -242,7 +241,7 @@ impl<T> OptionExt for Option<T> {
 pub fn entry_point<F>(f: F) -> proc_macro::TokenStream
 where
     F: FnOnce() -> proc_macro::TokenStream,
-    F: UnwindSafe
+    F: UnwindSafe,
 {
     ENTERED_ENTRY_POINT.with(|flag| flag.store(true, Ordering::SeqCst));
     let caught = catch_unwind(f);
@@ -263,9 +262,9 @@ where
             Ok(_) => {
                 assert!(!err_storage.is_empty());
                 quote!( #(#err_storage)* #dummy ).into()
-            },
+            }
             Err(boxed) => resume_unwind(boxed),
-        }
+        },
     }
 }
 

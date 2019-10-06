@@ -5,20 +5,14 @@ extern crate syn;
 extern crate proc_macro;
 
 use proc_macro2::Span;
+use proc_macro_error::{proc_macro_error, set_dummy, OptionExt, ResultExt};
 use syn::{
-    Ident,
     parse::{Parse, ParseStream},
-    token::Underscore,
     punctuated::Punctuated,
-    spanned::Spanned
+    spanned::Spanned,
+    token::Underscore,
+    Ident,
 };
-use proc_macro_error::{
-    proc_macro_error,
-    set_dummy,
-    ResultExt,
-    OptionExt,
-};
-
 
 struct IdentOrUnderscore {
     span: Span,
@@ -68,22 +62,19 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
             "abort_call_site" => abort_call_site!("abort_call_site! 2{} args {}", "+", "test"),
 
-            "direct_abort" =>
-                macro_error!(arg.span, "direct MacroError::abort() test").abort(),
+            "direct_abort" => macro_error!(arg.span, "direct MacroError::abort() test").abort(),
 
             "result_expect" => {
                 let e = syn::Error::new(arg.span, "error");
                 Err(e).expect_or_abort("Result::expect_or_abort() test")
-            },
+            }
 
             "result_unwrap" => {
                 let e = syn::Error::new(arg.span, "Result::unwrap_or_abort() test");
                 Err(e).unwrap_or_abort()
-            },
+            }
 
-            "option_expect" => {
-                None.expect_or_abort("Option::expect_or_abort() test")
-            },
+            "option_expect" => None.expect_or_abort("Option::expect_or_abort() test"),
 
             "need_default" => {
                 set_dummy(quote! {
@@ -95,10 +86,11 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 });
 
                 abort!(arg.span, "set_dummy test")
-            },
+            }
 
-            part if part.starts_with("multi") =>
-                emit_error!(arg.span, "multiple error part: {}", part),
+            part if part.starts_with("multi") => {
+                emit_error!(arg.span, "multiple error part: {}", part)
+            }
 
             _ => name.push_str(&arg.part),
         }
@@ -111,5 +103,4 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let name = Ident::new(&name, Span::call_site());
     quote!( fn #name() {} ).into()
-
 }
