@@ -1,28 +1,23 @@
 extern crate proc_macro;
 
 use version_check::Version;
-use proc_macro2::TokenStream;
+use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemFn, Attribute, parse_macro_input};
 
 
 #[proc_macro_attribute]
 pub fn proc_macro_error(
-    _attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream)
--> proc_macro::TokenStream {
+    _attr: TokenStream,
+    input: TokenStream)
+-> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
-    match impl_proc_macro_error(&input) {
-        Ok(ts) => ts.into(),
-        Err(e) => quote!(#input #e).into()
-    }
-}
 
-fn impl_proc_macro_error(input: &ItemFn) -> Result<TokenStream, TokenStream> {
     if !is_proc_macro(&input.attrs) {
-        return Err(quote! {
+        return quote!(
+            #input
             compile_error!("#[proc_macro_error] attribute can be used only with a proc-macro");
-        });
+        ).into()
     }
 
     let ItemFn { attrs, vis, sig, block } = input;
@@ -34,16 +29,15 @@ fn impl_proc_macro_error(input: &ItemFn) -> Result<TokenStream, TokenStream> {
         }
     } else {
         quote! {
+            // FIXME:
+            // proc_macro::TokenStream does not implement UnwindSafe until 1.37.0.
+            // Considering this is the closure's return type the safety check would fail
+            // for virtually every closure possible, the check is meaningless.
             ::proc_macro_error::entry_point(::std::panic::AssertUnwindSafe(|| #block ))
         }
     };
 
-    Ok(quote! {
-        #(#attrs)*
-        #vis #sig {
-            #body
-        }
-    })
+    quote!( #(#attrs)* #vis #sig { #body } ).into()
 }
 
 fn is_proc_macro(attrs: &[Attribute]) -> bool {

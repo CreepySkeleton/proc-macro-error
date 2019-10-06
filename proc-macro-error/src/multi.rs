@@ -1,6 +1,11 @@
 //! Facility to stack and emit multiple errors.
 //!
+//! [`abort!`] macro stops a proc-macro *right away*, much like in a panic-like
+//! fashion. But sometimes you *do not* want to stop right there, for example you're
+//! processing a list of attributes and want to *emit* a separate error for every
+//! mis-built attribute.
 //!
+//! The [`emit_error!`] and [`emit_call_site_error!`] macros are just for it!
 
 use crate::{MacroError, AbortNow, check_correctness};
 
@@ -10,10 +15,11 @@ thread_local! {
     static ERR_STORAGE: RefCell<Vec<MacroError>> = RefCell::new(Vec::new());
 }
 
-/// Emit an error not aborting the proc-macro right away.
-/// These errors errors will be converted to a `TokenStream` sequence
+/// Emit an error while not aborting the proc-macro right away.
+///
+/// The emitted errors will be converted to a `TokenStream` sequence
 /// of `compile_error!` invocations after the execution hits the end
-/// of function passed to [`entry_point`].
+/// of the function marked with `[proc_macro_error]` or the lambda passed to [`entry_point`].
 ///
 /// # Note:
 /// If a panic occurs somewhere in your macro no errors will be shown.
@@ -75,7 +81,7 @@ pub(crate) fn cleanup() -> Vec<MacroError> {
 
 /// Push the error into the global error storage.
 ///
-/// **Not a part of a public API.**
+/// **Not public API.**
 #[doc(hidden)]
 pub fn push_error(error: MacroError) {
     check_correctness();

@@ -8,12 +8,16 @@
 //! Let's consider an example:
 //!
 //! ```rust,ignore
+//! use proc_macro::TokenStream;
+//! use proc_macro_error::*;
+//!
 //! trait MyTrait {
 //!     fn do_thing();
 //! }
 //!
 //! // this proc macro is supposed to generate MyTrait impl
 //! #[proc_macro_derive(MyTrait)]
+//! #[proc_macro_error]
 //! fn example(input: TokenStream) -> TokenStream {
 //!     // somewhere deep inside
 //!     abort!(span, "something's wrong");
@@ -43,7 +47,7 @@
 //! errors:
 //!
 //! ```text
-//! error: set_dummy test
+//! error: something's wrong
 //!  --> $DIR/probe.rs:9:10
 //!   |
 //! 9 |#[proc_macro_derive(MyTrait)]
@@ -67,23 +71,27 @@
 //! This is how you do it:
 //!
 //! ```rust,ignore
+//! use proc_macro::TokenStream;
+//! use proc_macro_error::*;
+//!
 //!  trait MyTrait {
 //!      fn do_thing();
 //!  }
 //!
 //!  // this proc macro is supposed to generate MyTrait impl
 //!  #[proc_macro_derive(MyTrait)]
+//!  #[proc_macro_error]
 //!  fn example(input: TokenStream) -> TokenStream {
 //!      // first of all - we set a dummy impl which will be appended to
 //!      // `compile_error!` invocations in case a trigger does happen
-//!      proc_macro_error::set_dummy(Some(quote! {
+//!      set_dummy(quote! {
 //!          impl MyTrait for #name {
 //!              fn do_thing() { unimplemented!() }
 //!          }
-//!      }));
+//!      });
 //!
 //!      // somewhere deep inside
-//!      span_error!(span, "something's wrong");
+//!      abort!(span, "something's wrong");
 //!
 //!      // this implementation will be generated if no error happened
 //!      quote! {
@@ -111,7 +119,7 @@ use std::cell::Cell;
 use crate::check_correctness;
 
 thread_local! {
-    pub(crate) static DUMMY_IMPL: Cell<Option<TokenStream>> = Cell::new(None);
+    static DUMMY_IMPL: Cell<Option<TokenStream>> = Cell::new(None);
 }
 
 /// Sets dummy token stream which will be appended to `compile_error!(msg);...`
