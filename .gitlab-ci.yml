@@ -1,33 +1,23 @@
 stages:
-  - docker
   - test
-
-docker:
-  only:
-    - schedules
-  image: docker:latest
-  services:
-    - docker:dind
-  stage: docker
-  script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-    - cd ci/docker/rust
-    - docker build --no-cache -t registry.gitlab.com/dzamlo/gitlab-ci-rust-test/rust:latest .
-    - docker push registry.gitlab.com/dzamlo/gitlab-ci-rust-test/rust:latest
 
 .rust_test_template: &rust_test_template
   stage: test
-  image: "registry.gitlab.com/dzamlo/gitlab-ci-rust-test/rust:latest"
+  image: debian:stable-slim
   cache:
     paths:
-      - cargo/
+      - .cargo/
       - target/
   before_script:
-    - export CARGO_HOME="$CI_PROJECT_DIR/cargo"
+    - export CARGO_HOME="$CI_PROJECT_DIR/.cargo"
+    - export PATH="$PATH:$CARGO_HOME/bin"
+    - export RUST_BACKTRACE=full
+    - apt-get update
+    - apt-get install -y curl build-essential
+    - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
     - rustup --version
     - rustc --version
     - cargo --version
-
 
 test-stable:
   <<: *rust_test_template
@@ -53,7 +43,7 @@ test-nightly:
 test-1.31.0:
   <<: *rust_test_template
   script:
-    - cargo test --tests
+    - cargo test --tests # skip doctests
   variables:
     RUSTUP_TOOLCHAIN: nightly
 
@@ -64,5 +54,3 @@ test-fmt:
   script:
     - rustup component add rustfmt
     - cargo fmt --all -- --check
-
-

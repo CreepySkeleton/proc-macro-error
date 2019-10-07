@@ -79,7 +79,6 @@ use proc_macro::TokenStream;
 use syn::{spanned::Spanned, DeriveInput, ItemStruct, Fields, Attribute , parse_macro_input};
 use quote::quote;
 
-# fn process_attr(_a: &Attribute) -> Result<Attribute, String> { unimplemented!() }
 fn process_attrs(attrs: &[Attribute]) -> Vec<Attribute> {
     attrs
         .iter()
