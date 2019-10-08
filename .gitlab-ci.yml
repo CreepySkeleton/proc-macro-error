@@ -1,11 +1,12 @@
 stages:
   - test
 
-.rust_test_template: &rust_test_template
+
+.setup_template: &setup_template
   stage: test
   image: debian:stable-slim
   cache:
-    key: $RUSTUP_TOOLCHAIN
+    key: $RUST_VERSION
     paths:
       - .cargo/
       - target/
@@ -15,43 +16,44 @@ stages:
     - export RUST_BACKTRACE=full
     - apt-get update > /dev/null
     - apt-get install -y curl build-essential > /dev/null
-    - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
+    - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUST_VERSION
     - rustup --version
     - rustc --version
     - cargo --version
 
-test-stable:
-  <<: *rust_test_template
+.test_all_template: &test_all_template
+  <<: *setup_template
   script:
     - cargo test --all
+
+
+test-stable:
+  <<: *test_all_template
   variables:
-    RUSTUP_TOOLCHAIN: stable
+    RUST_VERSION: stable
 
 test-beta:
-  <<: *rust_test_template
-  script:
-    - cargo test --all
+  <<: *test_all_template
   variables:
-    RUSTUP_TOOLCHAIN: beta
+    RUST_VERSION: beta
 
 test-nightly:
-  <<: *rust_test_template
-  script:
-    - cargo test --all
+  <<: *test_all_template
   variables:
-    RUSTUP_TOOLCHAIN: nightly
+    RUST_VERSION: nightly
+
 
 test-1.31.0:
-  <<: *rust_test_template
+  <<: *setup_template
   script:
     - cargo test --tests # skip doctests
   variables:
-    RUSTUP_TOOLCHAIN: 1.31.0
+    RUST_VERSION: 1.31.0
 
 test-fmt:
-  <<: *rust_test_template
-  variables:
-    RUSTUP_TOOLCHAIN: stable
+  <<: *setup_template
   script:
     - rustup component add rustfmt
     - cargo fmt --all -- --check
+  variables:
+    RUST_VERSION: stable
