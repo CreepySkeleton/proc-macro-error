@@ -110,7 +110,7 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
     let fields = process_fields(&input.fields);
 
     // no need to think about emitted errors
-    // #[proc_macro_errors] will handle them for you
+    // #[proc_macro_error] will handle them for you
     //
     // just return a TokenStream as you normally would
     quote!(/* stuff */).into()

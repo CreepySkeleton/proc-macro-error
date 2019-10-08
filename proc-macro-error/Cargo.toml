@@ -1,6 +1,6 @@
 [package]
 name = "proc-macro-error"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 description = "Drop-in replacement to panics in proc-macros"
 
