@@ -73,7 +73,7 @@ pub fn abort_if_dirty() {
     check_correctness();
     ERR_STORAGE.with(|storage| {
         if !storage.borrow().is_empty() {
-            panic!(AbortNow)
+            abort_now()
         }
     });
 }
@@ -81,6 +81,12 @@ pub fn abort_if_dirty() {
 /// Clear the global error storage, returning the errors contained.
 pub(crate) fn cleanup() -> Vec<MacroError> {
     ERR_STORAGE.with(|storage| storage.replace(Vec::new()))
+}
+
+/// Abort right now.
+pub(crate) fn abort_now() -> ! {
+    check_correctness();
+    panic!(AbortNow)
 }
 
 /// Push the error into the global error storage.

@@ -5,6 +5,7 @@ stages:
   stage: test
   image: debian:stable-slim
   cache:
+    key: $RUSTUP_TOOLCHAIN
     paths:
       - .cargo/
       - target/
@@ -12,8 +13,8 @@ stages:
     - export CARGO_HOME="$CI_PROJECT_DIR/.cargo"
     - export PATH="$PATH:$CARGO_HOME/bin"
     - export RUST_BACKTRACE=full
-    - apt-get update
-    - apt-get install -y curl build-essential
+    - apt-get update > /dev/null
+    - apt-get install -y curl build-essential > /dev/null
     - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
     - rustup --version
     - rustc --version
@@ -45,7 +46,7 @@ test-1.31.0:
   script:
     - cargo test --tests # skip doctests
   variables:
-    RUSTUP_TOOLCHAIN: nightly
+    RUSTUP_TOOLCHAIN: 1.31.0
 
 test-fmt:
   <<: *rust_test_template

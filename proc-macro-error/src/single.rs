@@ -4,8 +4,7 @@
 //! see [crate level documentation](crate).
 
 use crate::{
-    check_correctness,
-    multi::{abort_if_dirty, push_error},
+    multi::{abort_now, push_error},
     ResultExt,
 };
 
@@ -13,8 +12,8 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 
 use std::{
-    convert::{AsMut, AsRef},
     fmt::{Display, Formatter},
+    ops::{Deref, DerefMut},
 };
 
 /// Shortcut for `MacroError::new($span.into(), format!($fmt, $args...))`
@@ -104,14 +103,9 @@ impl MacroError {
         MacroError::new(Span::call_site(), msg)
     }
 
-    /// Replace the error message with `msg`. Returns old message.
-    pub fn set_message(&mut self, msg: String) -> String {
-        std::mem::replace(&mut self.msg, msg.to_string())
-    }
-
     /// Replace the span info with `span`. Returns old span.
-    pub fn set_span(&mut self, span: Span) {
-        std::mem::replace(&mut self.span, span);
+    pub fn set_span(&mut self, span: Span) -> Span {
+        std::mem::replace(&mut self.span, span)
     }
 
     /// Get the span contained.
@@ -122,12 +116,10 @@ impl MacroError {
     /// Abort the proc-macro's execution and show the error.
     ///
     /// You're not supposed to use this function directly.
-    /// Use [`span_error!`] or [`call_site_error!`] instead.
+    /// Use [`abort!`] instead.
     pub fn abort(self) -> ! {
-        check_correctness();
         push_error(self);
-        abort_if_dirty();
-        unreachable!()
+        abort_now()
     }
 }
 
@@ -184,14 +176,16 @@ impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
     }
 }
 
-impl AsRef<String> for MacroError {
-    fn as_ref(&self) -> &String {
+impl Deref for MacroError {
+    type Target = str;
+
+    fn deref(&self) -> &str {
         &self.msg
     }
 }
 
-impl AsMut<String> for MacroError {
-    fn as_mut(&mut self) -> &mut String {
+impl DerefMut for MacroError {
+    fn deref_mut(&mut self) -> &mut str {
         &mut self.msg
     }
 }
