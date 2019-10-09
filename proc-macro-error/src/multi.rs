@@ -1,4 +1,4 @@
-//! Facility to stack and emit multiple errors.
+//! Facility for stacking and emitting multiple errors.
 //!
 //! [`abort!`] macro stops a proc-macro *right away*, much like in a panic-like
 //! fashion. But sometimes you *do not* want to stop right there, for example you're

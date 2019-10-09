@@ -1,4 +1,4 @@
-# [Upcoming]
+# v0.3.0 (2019-10-8)
 
 ## The crate has been completely rewritten from scratch!
 
