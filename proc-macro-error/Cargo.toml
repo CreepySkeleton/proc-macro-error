@@ -19,4 +19,4 @@ maintenance = { status = "actively-developed" }
 quote = "1"
 proc-macro2 = "1"
 syn = "1"
-proc-macro-error-attr = { path = "../proc-macro-error-attr", version = "=0.3.0"}
+proc-macro-error-attr = { path = "../proc-macro-error-attr", version = "0.3.1"}
