@@ -1,4 +1,4 @@
-# [Unreleased]
+# v0.3.1 (2019-10-16)
 * Introduced support for "help" messages
 
 # v0.3.0 (2019-10-8)
