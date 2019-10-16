@@ -27,32 +27,32 @@ macro_rules! macro_error {
 
     // span, message, help
 
-    ($span:expr, $fmt:expr, $($args:expr),+ ; help = $help_fmt:expr, $($help_args:expr),+) => {{
+    ($span:expr, $fmt:expr, $($args:expr),+ ; $help:ident = $help_fmt:expr, $($help_args:expr),+) => {{
         let msg = format!($fmt, $($args),*);
         let help = format!($help_fmt, $($help_args),*);
         let span = $span.into();
-        $crate::MacroError::with_help(span, msg, help)
+        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
     }};
 
-    ($span:expr, $fmt:expr, $($args:expr),+ ; help = $help_msg:expr) => {{
+    ($span:expr, $fmt:expr, $($args:expr),+ ; $help:ident = $help_msg:expr) => {{
         let msg = format!($fmt, $($args),*);
         let help = $help_msg.to_string();
         let span = $span.into();
-        $crate::MacroError::with_help(span, msg, help)
+        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
     }};
 
-    ($span:expr, $msg:expr ; help = $help_msg:expr, $($help_args:expr),+) => {{
+    ($span:expr, $msg:expr ; $help:ident = $help_msg:expr, $($help_args:expr),+) => {{
         let msg = $msg.to_string();
         let help = format!($help_fmt, $($help_args),*);
         let span = $span.into();
-        $crate::MacroError::with_help(span, msg, help)
+        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
     }};
 
-    ($span:expr, $msg:expr ; help = $help_msg:expr) => {{
+    ($span:expr, $msg:expr ; $help:ident = $help_msg:expr) => {{
         let msg = $msg.to_string();
         let help = $help_msg.to_string();
         let span = $span.into();
-        $crate::MacroError::with_help(span, msg, help)
+        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
     }};
 
     // span, message, no help
@@ -112,6 +112,7 @@ pub struct MacroError {
     pub(crate) span: Span,
     pub(crate) msg: String,
     pub(crate) help: Option<String>,
+    pub(crate) help_word: &'static str,
 }
 
 impl MacroError {
@@ -121,6 +122,7 @@ impl MacroError {
             span,
             msg,
             help: None,
+            help_word: "help",
         }
     }
 
@@ -130,6 +132,17 @@ impl MacroError {
             span,
             msg,
             help: Some(help),
+            help_word: "help",
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn with_help_abbr(span: Span, msg: String, help: String, help_word: &'static str) -> Self {
+        MacroError {
+            span,
+            msg,
+            help: Some(help),
+            help_word,
         }
     }
 
@@ -210,11 +223,14 @@ impl Display for MacroError {
         }
 
         let MacroError {
-            ref msg, ref help, ..
+            ref msg,
+            ref help,
+            ref help_word,
+            ..
         } = *self;
         if let Some(help) = help {
             ensure_double_lf(f, msg)?;
-            write!(f, "  help: ")?;
+            write!(f, "  {}: ", help_word)?;
             ensure_double_lf(f, help)
         } else {
             Display::fmt(msg, f)

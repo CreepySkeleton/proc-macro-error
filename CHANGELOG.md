@@ -1,4 +1,7 @@
-# v0.3.1 (2019-10-16)
+# v0.3.3 (2019-10-16)
+* Now you can use any word instead of "help"
+
+# v0.3.2 (2019-10-16)
 * Introduced support for "help" messages
 
 # v0.3.0 (2019-10-8)

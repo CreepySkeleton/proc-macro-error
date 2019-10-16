@@ -61,7 +61,7 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             "abort" => abort!(
                 arg.span,
                 "abort! 3{} args {}", "+", "test";
-                help = "help {} test", "message"
+                hint = "help {} test", "message"
             ),
 
             "abort_call_site" => abort_call_site!(
@@ -98,7 +98,7 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             part if part.starts_with("multi") => emit_error!(
                 arg.span,
                 "multiple error part: {}", part;
-                help = "help {} test", "message"
+                look = "help {} test", "message"
             ),
 
             _ => name.push_str(&arg.part),
