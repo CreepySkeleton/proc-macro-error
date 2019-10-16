@@ -29,21 +29,8 @@ thread_local! {
 /// If a panic occurs somewhere in your macro no errors will be shown.
 #[macro_export]
 macro_rules! emit_error {
-    ($span:expr, $fmt:expr, $($args:expr),*) => {{
-        use $crate::macro_error;
-
-        let err = macro_error!($span, $fmt, $($args),*);
-        $crate::multi::push_error(err);
-    }};
-
-    ($span:expr, $msg:expr) => {{
-        let err = $crate::MacroError::new($span.into(), $msg.to_string());
-        $crate::multi::push_error(err);
-    }};
-
-    ($err:expr) => {{
-        let err = $crate::MacroError::from($err);
-        $crate::multi::push_error(err);
+    ($($tts:tt)*) => {{
+        $crate::macro_error!($($tts)*).emit()
     }};
 }
 
@@ -51,18 +38,9 @@ macro_rules! emit_error {
 /// is still preferable over plain panic, see [Motivation](#motivation)
 #[macro_export]
 macro_rules! emit_call_site_error {
-    ($fmt:expr, $($args:expr),*) => {{
-        use $crate::push_span_error;
-
+    ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span::call_site();
-        push_span_error!(span, $fmt, $($args),*)
-    }};
-
-    ($msg:expr) => {{
-        use $crate::emit_error;
-
-        let span = $crate::proc_macro2::Span::call_site();
-        emit_error!(span, $msg)
+        $crate::macro_error!(span, $($tts)*).emit()
     }};
 }
 

@@ -120,7 +120,7 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
 ## Limitations
 
 - No support for warnings.
-- Very limited support for "help" suggestions.
+- "help" suggestions cannot have their own span info.
 - If a panic occurs somewhere in your macro no errors will be displayed.
 
 ## Motivation

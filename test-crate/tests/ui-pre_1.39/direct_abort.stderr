@@ -1,5 +1,0 @@
-error: direct MacroError::abort() test
- --> $DIR/direct_abort.rs:4:10
-  |
-4 | make_fn!(direct_abort);
-  |          ^^^^^^^^^^^^

@@ -1,5 +1,0 @@
-error: abort_call_site! 2+ args test
- --> $DIR/call_site.rs:4:1
-  |
-4 | make_fn!(abort_call_site);
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^

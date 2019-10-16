@@ -19,6 +19,44 @@ use std::{
 /// Shortcut for `MacroError::new($span.into(), format!($fmt, $args...))`
 #[macro_export]
 macro_rules! macro_error {
+    // from alias
+
+    ($err:expr) => {{
+        $crate::MacroError::from($err)
+    }};
+
+    // span, message, help
+
+    ($span:expr, $fmt:expr, $($args:expr),+ ; help = $help_fmt:expr, $($help_args:expr),+) => {{
+        let msg = format!($fmt, $($args),*);
+        let help = format!($help_fmt, $($help_args),*);
+        let span = $span.into();
+        $crate::MacroError::with_help(span, msg, help)
+    }};
+
+    ($span:expr, $fmt:expr, $($args:expr),+ ; help = $help_msg:expr) => {{
+        let msg = format!($fmt, $($args),*);
+        let help = $help_msg.to_string();
+        let span = $span.into();
+        $crate::MacroError::with_help(span, msg, help)
+    }};
+
+    ($span:expr, $msg:expr ; help = $help_msg:expr, $($help_args:expr),+) => {{
+        let msg = $msg.to_string();
+        let help = format!($help_fmt, $($help_args),*);
+        let span = $span.into();
+        $crate::MacroError::with_help(span, msg, help)
+    }};
+
+    ($span:expr, $msg:expr ; help = $help_msg:expr) => {{
+        let msg = $msg.to_string();
+        let help = $help_msg.to_string();
+        let span = $span.into();
+        $crate::MacroError::with_help(span, msg, help)
+    }};
+
+    // span, message, no help
+
     ($span:expr, $fmt:expr, $($args:expr),+) => {{
         let msg = format!($fmt, $($args),*);
         let span = $span.into();
@@ -53,35 +91,18 @@ macro_rules! macro_error {
 ///
 #[macro_export]
 macro_rules! abort {
-    ($span:expr, $fmt:expr, $($args:expr),*) => {{
-        use $crate::macro_error;
-        macro_error!($span, $fmt, $($args),*).abort()
+    ($($tts:tt)*) => {{
+        $crate::macro_error!($($tts)*).abort()
     }};
-
-    ($span:expr, $msg:expr) => {{
-        use $crate::macro_error;
-        macro_error!($span, $msg).abort()
-    }};
-
-    ($err:expr) => { $crate::MacroError::from($err).abort() };
 }
 
 /// Shortcut for `abort!(Span::call_site(), msg...)`. This macro
 /// is still preferable over plain panic, see [Motivation](#motivation)
 #[macro_export]
 macro_rules! abort_call_site {
-    ($fmt:expr, $($args:expr),*) => {{
-        use $crate::abort;
-
+    ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span::call_site();
-        abort!(span, $fmt, $($args),*)
-    }};
-
-    ($msg:expr) => {{
-        use $crate::abort;
-
-        let span = $crate::proc_macro2::Span::call_site();
-        abort!(span, $msg)
+        $crate::macro_error!(span, $($tts)*).abort()
     }};
 }
 
@@ -90,17 +111,36 @@ macro_rules! abort_call_site {
 pub struct MacroError {
     pub(crate) span: Span,
     pub(crate) msg: String,
+    pub(crate) help: Option<String>,
 }
 
 impl MacroError {
     /// Create an error with the span and message provided.
     pub fn new(span: Span, msg: String) -> Self {
-        MacroError { span, msg }
+        MacroError {
+            span,
+            msg,
+            help: None,
+        }
+    }
+
+    /// Create an error with the span, the message, and the help message provided.
+    pub fn with_help(span: Span, msg: String, help: String) -> Self {
+        MacroError {
+            span,
+            msg,
+            help: Some(help),
+        }
     }
 
     /// A shortcut for `MacroError::new(Span::call_site(), message)`
     pub fn call_site(msg: String) -> Self {
         MacroError::new(Span::call_site(), msg)
+    }
+
+    /// A shortcut for `MacroError::with_help(Span::call_site(), message, help)`
+    pub fn call_site_help(msg: String, help: String) -> Self {
+        MacroError::with_help(Span::call_site(), msg, help)
     }
 
     /// Replace the span info with `span`. Returns old span.
@@ -120,6 +160,14 @@ impl MacroError {
     pub fn abort(self) -> ! {
         push_error(self);
         abort_now()
+    }
+
+    /// Display the error while not aborting macro execution.
+    ///
+    /// You're not supposed to use this function directly.
+    /// Use [`emit_error!`] instead.
+    pub fn emit(self) {
+        push_error(self);
     }
 }
 
@@ -143,15 +191,34 @@ impl From<&str> for MacroError {
 
 impl ToTokens for MacroError {
     fn to_tokens(&self, ts: &mut TokenStream) {
-        let MacroError { ref msg, ref span } = *self;
-        let msg = syn::LitStr::new(msg, *span);
+        let span = &self.span;
+        let msg = syn::LitStr::new(&self.to_string(), *span);
         ts.extend(quote_spanned!(*span=> compile_error!(#msg); ));
     }
 }
 
 impl Display for MacroError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        Display::fmt(&self.msg, f)
+        fn ensure_double_lf(f: &mut Formatter, s: &str) -> std::fmt::Result {
+            if s.ends_with("\n\n") {
+                Display::fmt(s, f)
+            } else if s.ends_with('\n') {
+                write!(f, "{}\n", s)
+            } else {
+                write!(f, "{}\n\n", s)
+            }
+        }
+
+        let MacroError {
+            ref msg, ref help, ..
+        } = *self;
+        if let Some(help) = help {
+            ensure_double_lf(f, msg)?;
+            write!(f, "  help: ")?;
+            ensure_double_lf(f, help)
+        } else {
+            Display::fmt(msg, f)
+        }
     }
 }
 
@@ -169,7 +236,9 @@ impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
         match self {
             Ok(res) => res,
             Err(e) => {
-                let MacroError { msg, span } = e.into();
+                let e = e.into();
+                let span = e.span;
+                let msg = e.to_string();
                 abort!(span, "{}: {}", message, msg);
             }
         }

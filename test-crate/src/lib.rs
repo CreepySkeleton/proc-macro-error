@@ -58,9 +58,16 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     for arg in input.0 {
         match &*arg.part {
-            "abort" => abort!(arg.span, "abort! 3{} args {}", "+", "test"),
+            "abort" => abort!(
+                arg.span,
+                "abort! 3{} args {}", "+", "test";
+                help = "help {} test", "message"
+            ),
 
-            "abort_call_site" => abort_call_site!("abort_call_site! 2{} args {}", "+", "test"),
+            "abort_call_site" => abort_call_site!(
+                "abort_call_site! 2{} args {}", "+", "test";
+                help = "help {} test", "message"
+            ),
 
             "direct_abort" => macro_error!(arg.span, "direct MacroError::abort() test").abort(),
 
@@ -88,9 +95,11 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 abort!(arg.span, "set_dummy test")
             }
 
-            part if part.starts_with("multi") => {
-                emit_error!(arg.span, "multiple error part: {}", part)
-            }
+            part if part.starts_with("multi") => emit_error!(
+                arg.span,
+                "multiple error part: {}", part;
+                help = "help {} test", "message"
+            ),
 
             _ => name.push_str(&arg.part),
         }

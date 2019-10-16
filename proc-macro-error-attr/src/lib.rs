@@ -2,8 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Attribute, ItemFn};
-use version_check::Version;
+use syn::{parse_macro_input, Attribute, Block, ItemFn};
 
 #[proc_macro_attribute]
 pub fn proc_macro_error(_attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -24,22 +23,27 @@ pub fn proc_macro_error(_attr: TokenStream, input: TokenStream) -> TokenStream {
         block,
     } = input;
 
-    let version = Version::read().unwrap();
-    let body = if version.at_least("1.37.0") {
-        quote! {
-            ::proc_macro_error::entry_point(|| #block )
-        }
-    } else {
-        quote! {
-            // FIXME:
-            // proc_macro::TokenStream does not implement UnwindSafe until 1.37.0.
-            // Considering this is the closure's return type the safety check would fail
-            // for virtually every closure possible, the check is meaningless.
-            ::proc_macro_error::entry_point(::std::panic::AssertUnwindSafe(|| #block ))
-        }
-    };
+    let body = gen_body(block);
 
     quote!( #(#attrs)* #vis #sig { #body } ).into()
+}
+
+#[rustversion::since(1.37)]
+fn gen_body(block: Box<Block>) -> proc_macro2::TokenStream {
+    quote! {
+        ::proc_macro_error::entry_point(|| #block )
+    }
+}
+
+#[rustversion::before(1.37)]
+fn gen_body(block: Box<Block>) -> proc_macro2::TokenStream {
+    quote! {
+        // FIXME:
+        // proc_macro::TokenStream does not implement UnwindSafe until 1.37.0.
+        // Considering this is the closure's return type the safety check would fail
+        // for virtually every closure possible, the check is meaningless.
+        ::proc_macro_error::entry_point(::std::panic::AssertUnwindSafe(|| #block ))
+    }
 }
 
 fn is_proc_macro(attrs: &[Attribute]) -> bool {

@@ -14,7 +14,7 @@ proc-macro = true
 quote = "1"
 proc-macro2 = "1"
 syn = { version = "1", features = ["full"] }
-version_check = "0.9"
+rustversion = "0.1"
 
 [dev-dependencies]
 trybuild = "1.0"
