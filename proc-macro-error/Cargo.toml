@@ -1,6 +1,6 @@
 [package]
 name = "proc-macro-error"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 description = "Drop-in replacement to panics in proc-macros"
 
@@ -19,4 +19,4 @@ maintenance = { status = "actively-developed" }
 quote = "1"
 proc-macro2 = "1"
 syn = "1"
-proc-macro-error-attr = { path = "../proc-macro-error-attr", version = "0.3.2"}
+proc-macro-error-attr = { path = "../proc-macro-error-attr", version = "0.3.3"}
