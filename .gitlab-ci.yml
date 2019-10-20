@@ -5,11 +5,6 @@ stages:
 .setup_template: &setup_template
   stage: test
   image: debian:stable-slim
-  cache:
-    key: $RUST_VERSION
-    paths:
-      - .cargo/
-      - target/
   before_script:
     - export CARGO_HOME="$CI_PROJECT_DIR/.cargo"
     - export PATH="$PATH:$CARGO_HOME/bin"
