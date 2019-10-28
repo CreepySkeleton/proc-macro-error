@@ -163,6 +163,23 @@ This crate aims to provide such a mechanism. All you have to do is annotate your
 Please note that **this crate is not intended to be used in any other way
 than a proc-macro error reporting**, use `Result` and `?` for anything else.
 
+<br>
+
+#### License
+
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
+
+<br>
+
+<sub>
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
+</sub>
+
 
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
 [`proc_macro::Diagnostics`]: (https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
