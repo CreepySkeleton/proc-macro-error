@@ -18,3 +18,4 @@ rustversion = "1.0"
 
 [dev-dependencies]
 trybuild = "1.0"
+toml = "=0.5.2" # DO NOT BUMP!!!
