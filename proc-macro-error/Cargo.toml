@@ -18,5 +18,5 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 quote = "1"
 proc-macro2 = "1"
-syn = "1"
+syn = { version = "1", default-features = false }
 proc-macro-error-attr = { path = "../proc-macro-error-attr", version = "0.3.4"}
