@@ -1,6 +1,6 @@
 error: abort! 3+ args test
 
-  hint: help message test
+  help: help message test
 
  --> $DIR/abort.rs:4:10
   |

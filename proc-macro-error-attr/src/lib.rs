@@ -4,13 +4,13 @@ use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
 use std::iter::FromIterator;
-use syn_mid::{ItemFn, Block};
 use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input,
     punctuated::Punctuated,
     Attribute, Token,
 };
+use syn_mid::{Block, ItemFn};
 
 use self::Setting::*;
 
@@ -99,7 +99,8 @@ pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
         #output
 
         { #body }
-    ).into()
+    )
+    .into()
 }
 
 #[derive(PartialEq)]

@@ -1,6 +1,6 @@
 # proc-macro-error
 
-[![Build Status](https://travis-ci.org/CreepySkeleton/proc-macro-error.svg?branch=master)](https://travis-ci.org/CreepySkeleton/proc-macro-error)
+[![travis ci](https://travis-ci.org/CreepySkeleton/proc-macro-error.svg?branch=master)](https://travis-ci.org/CreepySkeleton/proc-macro-error)
 [![docs.rs](https://docs.rs/proc-macro-error/badge.svg)](https://docs.rs/proc-macro-error)
 
 This crate aims to make error reporting in proc-macros simple and easy to use.
@@ -8,31 +8,17 @@ Migrate from `panic!`-based errors for as little effort as possible!
 
 Also, there's ability to [append a dummy token stream][crate::dummy] to your errors.
 
-## Enticement
-
-Your errors look like this?
-```text
-error: proc-macro derive panicked
-  --> $DIR/bool_default_value.rs:11:10
-   |
-11 | #[derive(StructOpt, Debug)]
-   |          ^^^^^^^^^
-   |
-   = help: message: default_value is meaningless for bool
+```toml
+[dependencies]
+proc-macro-error = "0.4"
 ```
+*Supports rustc +1.31*
 
-But you would like it to be like this!
-```text
-error: default_value is meaningless for bool
-  --> $DIR/bool_default_value.rs:14:24
-   |
-14 |     #[structopt(short, default_value = true)]
-   |                        ^^^^^^^^^^^^^
-```
+---
 
-This is exactly what this crate is built for!!!
+[Documentation and guide](https://docs.rs/proc-macro-error)
 
-## Usage
+## Quick usage
 
 ### Panic-like usage
 

@@ -7,12 +7,12 @@
 //!
 //! The [`emit_error!`] and [`emit_call_site_error!`] macros are just for it!
 
-use crate::{check_correctness, AbortNow, MacroError};
+use crate::{check_correctness, single::Diagnostic, AbortNow};
 
 use std::cell::RefCell;
 
 thread_local! {
-    static ERR_STORAGE: RefCell<Vec<MacroError>> = RefCell::new(Vec::new());
+    static ERR_STORAGE: RefCell<Vec<Diagnostic>> = RefCell::new(Vec::new());
 }
 
 /// Emit an error while not aborting the proc-macro right away.
@@ -30,7 +30,7 @@ thread_local! {
 #[macro_export]
 macro_rules! emit_error {
     ($($tts:tt)*) => {{
-        $crate::macro_error!($($tts)*).emit()
+        $crate::diagnostic!($($tts)*).emit()
     }};
 }
 
@@ -40,7 +40,7 @@ macro_rules! emit_error {
 macro_rules! emit_call_site_error {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span::call_site();
-        $crate::macro_error!(span, $($tts)*).emit()
+        $crate::diagnostic!(span, $($tts)*).emit()
     }};
 }
 
@@ -57,7 +57,7 @@ pub fn abort_if_dirty() {
 }
 
 /// Clear the global error storage, returning the errors contained.
-pub(crate) fn cleanup() -> Vec<MacroError> {
+pub(crate) fn cleanup() -> Vec<Diagnostic> {
     ERR_STORAGE.with(|storage| storage.replace(Vec::new()))
 }
 
@@ -68,10 +68,7 @@ pub(crate) fn abort_now() -> ! {
 }
 
 /// Push the error into the global error storage.
-///
-/// **Not public API.**
-#[doc(hidden)]
-pub fn push_error(error: MacroError) {
+pub(crate) fn push_error(error: Diagnostic) {
     check_correctness();
     ERR_STORAGE.with(|storage| storage.borrow_mut().push(error))
 }

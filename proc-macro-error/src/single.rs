@@ -11,61 +11,117 @@ use crate::{
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 
-use std::{
-    fmt::{Display, Formatter},
-    ops::{Deref, DerefMut},
-};
+use std::fmt::{Display, Formatter};
+
+// FIXME: this can be greatly simplified via $()?
+// as soon as MRSV hits 1.32
 
 /// Shortcut for `MacroError::new($span.into(), format!($fmt, $args...))`
-#[macro_export]
-macro_rules! macro_error {
+#[macro_export(local_inner_macros)]
+macro_rules! diagnostic {
     // from alias
-
     ($err:expr) => {{
-        $crate::MacroError::from($err)
+        $crate::Diagnostic::from($err)
     }};
 
     // span, message, help
-
-    ($span:expr, $fmt:expr, $($args:expr),+ ; $help:ident = $help_fmt:expr, $($help_args:expr),+) => {{
-        let msg = format!($fmt, $($args),*);
-        let help = format!($help_fmt, $($help_args),*);
-        let span = $span.into();
-        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
+    ($span:expr, $fmt:expr, $($args:expr),+ ; $($rest:tt)+) => {{
+        let diag = $crate::Diagnostic::span_error(
+            $span.into(),
+            __pme__format!($fmt, $($args),*)
+        );
+        __pme__suggestions!(diag $($rest)*);
+        diag
     }};
 
-    ($span:expr, $fmt:expr, $($args:expr),+ ; $help:ident = $help_msg:expr) => {{
-        let msg = format!($fmt, $($args),*);
-        let help = $help_msg.to_string();
-        let span = $span.into();
-        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
-    }};
-
-    ($span:expr, $msg:expr ; $help:ident = $help_msg:expr, $($help_args:expr),+) => {{
-        let msg = $msg.to_string();
-        let help = format!($help_fmt, $($help_args),*);
-        let span = $span.into();
-        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
-    }};
-
-    ($span:expr, $msg:expr ; $help:ident = $help_msg:expr) => {{
-        let msg = $msg.to_string();
-        let help = $help_msg.to_string();
-        let span = $span.into();
-        $crate::MacroError::with_help_abbr(span, msg, help, stringify!($help))
+    ($span:expr, $msg:expr ; $($rest:tt)+) => {{
+        let diag = $crate::Diagnostic::span_error($span.into(), $msg.to_string());
+        __pme__suggestions!(diag $($rest)*);
+        diag
     }};
 
     // span, message, no help
-
     ($span:expr, $fmt:expr, $($args:expr),+) => {{
-        let msg = format!($fmt, $($args),*);
-        let span = $span.into();
-        $crate::MacroError::new(span, msg)
+        $crate::Diagnostic::span_error(
+            $span.into(),
+            __pme__format!($fmt, $($args),*)
+        )
     }};
 
     ($span:expr, $msg:expr) => {{
-        $crate::MacroError::new($span.into(), $msg.to_string())
+        $crate::Diagnostic::span_error($span.into(), $msg.to_string())
     }};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __pme__format {
+    ($($args:tt)*) => {format!($($args)*)};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __pme__suggestions {
+    ($var:ident $help:ident =? $msg:expr) => {
+        let $var = if let Some(msg) = $msg {
+            $var.suggestion(stringify!($help), msg.to_string())
+        } else {
+            $var
+        };
+    };
+    ($var:ident $help:ident =? $span:expr => $msg:expr) => {
+        let $var = if let Some(msg) = $msg {
+            $var.span_suggestion($span.into(), stringify!($help), msg.to_string())
+        } else {
+            $var
+        };
+    };
+
+    ($var:ident $help:ident =? $msg:expr ; $($rest:tt)*) => {
+        __pme__suggestions!($var $help =? $msg);
+        __pme__suggestions!($var $($rest)*);
+    };
+    ($var:ident $help:ident =? $span:expr => $msg:expr ; $($rest:tt)*) => {
+        __pme__suggestions!($var $help =? $span => $msg);
+        __pme__suggestions!($var $($rest)*);
+    };
+
+    ($var:ident $help:ident = $msg:expr) => {
+        let $var = $var.suggestion(stringify!($help), $msg.to_string());
+    };
+    ($var:ident $help:ident = $fmt:expr, $($args:expr),*) => {
+        let $var = $var.suggestion(
+            stringify!($help),
+            format!($fmt, $($args),*)
+        );
+    };
+    ($var:ident $help:ident = $span:expr => $msg:expr) => {
+        let $var = $var.span_suggestion($span.into(), stringify!($help), $msg.to_string());
+    };
+    ($var:ident $help:ident = $span:expr => $fmt:expr, $($args:expr),*) => {
+        let $var = $var.span_suggestion(
+            $span.into(),
+            stringify!($help),
+            format!($fmt, $($args),*)
+        );
+    };
+
+    ($var:ident $help:ident = $msg:expr ; $($rest:tt)*) => {
+        __pme__suggestions!($var $help = $msg);
+        __pme__suggestions!($var $($rest)*);
+    };
+    ($var:ident $help:ident = $fmt:expr, $($args:expr),* ; $($rest:tt)*) => {
+        __pme__suggestions!($var $help = $fmt, $($args),*);
+        __pme__suggestions!($var $($rest)*);
+    };
+    ($var:ident $help:ident = $span:expr => $msg:expr ; $($rest:tt)*) => {
+        __pme__suggestions!($var $help = $span => $msg);
+        __pme__suggestions!($var $($rest)*);
+    };
+    ($var:ident $help:ident = $span:expr => $fmt:expr, $($args:expr),* ; $($rest:tt)*) => {
+        __pme__suggestions!($var $help = $span => $fmt, $($args),*);
+        __pme__suggestions!($var $($rest)*);
+    };
 }
 
 /// Makes a [`MacroError`] instance from provided arguments and aborts showing it.
@@ -92,7 +148,7 @@ macro_rules! macro_error {
 #[macro_export]
 macro_rules! abort {
     ($($tts:tt)*) => {{
-        $crate::macro_error!($($tts)*).abort()
+        $crate::diagnostic!($($tts)*).abort()
     }};
 }
 
@@ -102,68 +158,81 @@ macro_rules! abort {
 macro_rules! abort_call_site {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span::call_site();
-        $crate::macro_error!(span, $($tts)*).abort()
+        $crate::diagnostic!(span, $($tts)*).abort()
     }};
 }
 
-/// An single error message in a proc macro with span info attached.
-#[derive(Debug)]
-pub struct MacroError {
-    pub(crate) span: Span,
-    pub(crate) msg: String,
-    pub(crate) help: Option<String>,
-    pub(crate) help_word: &'static str,
+/// A structure representing a single diagnostic message
+pub struct Diagnostic {
+    span: Span,
+    msg: String,
+    suggestions: Vec<(SuggestionKind, String, Span)>,
 }
 
-impl MacroError {
-    /// Create an error with the span and message provided.
-    pub fn new(span: Span, msg: String) -> Self {
-        MacroError {
+enum SuggestionKind {
+    Help,
+    Note,
+}
+
+impl SuggestionKind {
+    fn name(&self) -> &'static str {
+        match self {
+            SuggestionKind::Note => "note",
+            SuggestionKind::Help => "help",
+        }
+    }
+}
+
+impl Diagnostic {
+    /// Create new error message to be emited later
+    pub fn span_error(span: Span, msg: String) -> Self {
+        Diagnostic {
             span,
             msg,
-            help: None,
-            help_word: "help",
+            suggestions: vec![],
         }
     }
 
-    /// Create an error with the span, the message, and the help message provided.
-    pub fn with_help(span: Span, msg: String, help: String) -> Self {
-        MacroError {
-            span,
-            msg,
-            help: Some(help),
-            help_word: "help",
+    pub fn error(msg: String) -> Self {
+        Diagnostic::span_error(Span::call_site(), msg)
+    }
+
+    pub fn span_help(mut self, span: Span, msg: String) -> Self {
+        self.suggestions.push((SuggestionKind::Help, msg, span));
+        self
+    }
+
+    pub fn help(mut self, msg: String) -> Self {
+        self.suggestions
+            .push((SuggestionKind::Help, msg, self.span));
+        self
+    }
+
+    pub fn span_note(mut self, span: Span, msg: String) -> Self {
+        self.suggestions.push((SuggestionKind::Note, msg, span));
+        self
+    }
+
+    pub fn note(mut self, msg: String) -> Self {
+        self.suggestions
+            .push((SuggestionKind::Note, msg, self.span));
+        self
+    }
+
+    #[doc(hidden)]
+    pub fn span_suggestion(self, span: Span, suggestion: &str, msg: String) -> Self {
+        match suggestion {
+            "help" | "hint" => self.span_help(span, msg),
+            _ => self.span_note(span, msg),
         }
     }
 
     #[doc(hidden)]
-    pub fn with_help_abbr(span: Span, msg: String, help: String, help_word: &'static str) -> Self {
-        MacroError {
-            span,
-            msg,
-            help: Some(help),
-            help_word,
+    pub fn suggestion(self, suggestion: &str, msg: String) -> Self {
+        match suggestion {
+            "help" | "hint" => self.help(msg),
+            _ => self.note(msg),
         }
-    }
-
-    /// A shortcut for `MacroError::new(Span::call_site(), message)`
-    pub fn call_site(msg: String) -> Self {
-        MacroError::new(Span::call_site(), msg)
-    }
-
-    /// A shortcut for `MacroError::with_help(Span::call_site(), message, help)`
-    pub fn call_site_help(msg: String, help: String) -> Self {
-        MacroError::with_help(Span::call_site(), msg, help)
-    }
-
-    /// Replace the span info with `span`. Returns old span.
-    pub fn set_span(&mut self, span: Span) -> Span {
-        std::mem::replace(&mut self.span, span)
-    }
-
-    /// Get the span contained.
-    pub fn span(&self) -> Span {
-        self.span
     }
 
     /// Abort the proc-macro's execution and show the error.
@@ -171,7 +240,7 @@ impl MacroError {
     /// You're not supposed to use this function directly.
     /// Use [`abort!`] instead.
     pub fn abort(self) -> ! {
-        push_error(self);
+        self.emit();
         abort_now()
     }
 
@@ -184,25 +253,25 @@ impl MacroError {
     }
 }
 
-impl From<syn::Error> for MacroError {
-    fn from(e: syn::Error) -> Self {
-        MacroError::new(e.span(), e.to_string())
-    }
-}
-
-impl From<String> for MacroError {
+impl From<String> for Diagnostic {
     fn from(msg: String) -> Self {
-        MacroError::call_site(msg)
+        Diagnostic::error(msg)
     }
 }
 
-impl From<&str> for MacroError {
+impl From<&str> for Diagnostic {
     fn from(msg: &str) -> Self {
-        MacroError::call_site(msg.into())
+        Diagnostic::error(msg.into())
     }
 }
 
-impl ToTokens for MacroError {
+impl From<syn::Error> for Diagnostic {
+    fn from(e: syn::Error) -> Self {
+        Diagnostic::span_error(e.span(), e.to_string())
+    }
+}
+
+impl ToTokens for Diagnostic {
     fn to_tokens(&self, ts: &mut TokenStream) {
         let span = &self.span;
         let msg = syn::LitStr::new(&self.to_string(), *span);
@@ -210,7 +279,7 @@ impl ToTokens for MacroError {
     }
 }
 
-impl Display for MacroError {
+impl Display for Diagnostic {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         fn ensure_double_lf(f: &mut Formatter, s: &str) -> std::fmt::Result {
             if s.ends_with("\n\n") {
@@ -222,23 +291,27 @@ impl Display for MacroError {
             }
         }
 
-        let MacroError {
+        let Diagnostic {
             ref msg,
-            ref help,
-            ref help_word,
+            ref suggestions,
             ..
         } = *self;
-        if let Some(help) = help {
-            ensure_double_lf(f, msg)?;
-            write!(f, "  {}: ", help_word)?;
-            ensure_double_lf(f, help)
-        } else {
+
+        if suggestions.is_empty() {
             Display::fmt(msg, f)
+        } else {
+            ensure_double_lf(f, msg)?;
+            for suggestion in suggestions {
+                write!(f, "  {}: ", suggestion.0.name())?;
+                ensure_double_lf(f, &suggestion.1)?;
+            }
+
+            Ok(())
         }
     }
 }
 
-impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
+impl<T, E: Into<Diagnostic>> ResultExt for Result<T, E> {
     type Ok = T;
 
     fn unwrap_or_abort(self) -> T {
@@ -255,22 +328,8 @@ impl<T, E: Into<MacroError>> ResultExt for Result<T, E> {
                 let e = e.into();
                 let span = e.span;
                 let msg = e.to_string();
-                abort!(span, "{}: {}", message, msg);
+                abort!(span, "{}: {}", message, msg)
             }
         }
-    }
-}
-
-impl Deref for MacroError {
-    type Target = str;
-
-    fn deref(&self) -> &str {
-        &self.msg
-    }
-}
-
-impl DerefMut for MacroError {
-    fn deref_mut(&mut self) -> &mut str {
-        &mut self.msg
     }
 }

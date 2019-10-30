@@ -69,7 +69,7 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 help = "help {} test", "message"
             ),
 
-            "direct_abort" => macro_error!(arg.span, "direct MacroError::abort() test").abort(),
+            "direct_abort" => diagnostic!(arg.span, "direct MacroError::abort() test").abort(),
 
             "result_expect" => {
                 let e = syn::Error::new(arg.span, "error");
@@ -95,17 +95,24 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 abort!(arg.span, "set_dummy test")
             }
 
-            part if part.starts_with("multi") => emit_error!(
-                arg.span,
-                "multiple error part: {}", part;
-                look = "help {} test", "message"
-            ),
+            part if part.starts_with("multi") => {
+                let no_help: Option<String> = Option::None;
+                let help = Some("Option help test");
+                emit_error!(
+                    arg.span,
+                    "multiple error part: {}", part;
+                    note = "help {} test", "message";
+                    hint =? help;
+                    wow = "excitement";
+                    help =? no_help
+                )
+            }
 
             _ => name.push_str(&arg.part),
         }
     }
 
-    // test that all the panics from another source are not to be caught
+    // test that unrelated panics are not affected
     if name.is_empty() {
         panic!("unrelated panic test")
     }
