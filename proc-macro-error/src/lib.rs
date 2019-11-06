@@ -3,21 +3,124 @@
 //! This crate aims to make error reporting in proc-macros simple and easy to use.
 //! Migrate from `panic!`-based errors for as little effort as possible!
 //!
-//! Also, there's ability to [append a dummy token stream][dummy] to your errors.
+//! Also, there's ability to [append a dummy token stream](dummy/index.html) to your errors.
 //!
 //! ## Limitations
 //!
-//! - Warnings get emitted only on nightly, they're ignored on stable.
-//! - "help" suggestions cannot have their own span info on stable.
-//! - If a panic occurs somewhere in your macro no errors will be displayed.
+//! - Warnings are emitted only on nightly, they're ignored on stable.
+//! - "help" suggestions cannot have their own span info on stable, (they inherit parent span).
+//! - If a panic occurs somewhere in your macro no errors will be displayed. This is not a
+//!   technical limitation but intentional design, `panic` is not for error reporting.
 //!
 //! ## Guide
 //!
-//! ### Table of contents
+//! ### Macros
 //!
-//! ### Introduction
+//! First of all - **all the emitting-related API must be used within a function
+//! annotated with [`#[proc_macro_error]`][proc_macro_error] attribute**. You'll just get a
+//! panic otherwise, no errors will be shown.
+//!
+//! For most of the time you will be using macros.
+//!
+//! - [`abort!`]:
+//!
+//!     Very much panic-like usage - abort execution and show the error. Expands to `!` (never type).
+//!
+//! - [`abort_call_site!`]:
+//!
+//!     Shortcut for `abort!(Span::call_site(), ...)`. Expands to `!` (never type).
+//!
+//! - [`emit_error!`]:
+//!
+//!     [`proc_macro::Diagnostic`]-like usage - emit the error but do not abort the macro.
+//!     The compilation will fail nonetheless. Expands to `()` (unit type).
+//!
+//! - [`emit_call_site_error!`]:
+//!
+//!     Shortcut for `emit_error!(Span::call_site(), ...)`. Expands to `()` (unit type).
+//!
+//! - [`emit_warning!`]:
+//!
+//!     Like `emit_error!` but emit a warning instead of error. The compilation will succeed.
+//!     Expands to `()` (unit type).
+//!
+//!     **Beware**: warnings are nightly only, they are completely ignored on stable.
+//!
+//! - [`emit_call_site_warning!`]:
+//!
+//!     Shortcut for `emit_warning!(Span::call_site(), ...)`. Expands to `()` (unit type).
+//!
+//! - [`diagnostic`]:
+//!
+//!     Build instance of `Diagnostic` in format-like style.
+//!
+//! ### Syntax
+//!
+//! All the macros have pretty much the same syntax:
+//!
+//! 1.  ```ignore
+//!     abort!(single_expr)
+//!     ```
+//!     Shortcut for `Diagnostic::from().abort()`
+//!
+//! 2.  ```ignore
+//!     abort!(span, message)
+//!     ```
+//!     Shortcut for `Diagnostic::spanned(span, message.to_string()).abort()`
+//!
+//! 3.  ```ignore
+//!     abort!(span, format_literal, format_args...)
+//!     ```
+//!     Shortcut for `Diagnostic::spanned(span, format!(format_literal, format_args...)).abort()`
+//!
+//! That's it. `abort!`, `emit_warning`, `emit_error` share this exact syntax.
+//! `abort_call_site!`, `emit_call_site_warning`, `emit_call_site_error` lack 1 form
+//! and do not take span in 2 and 3 forms.
+//!
+//! `diagnostic!` require `Level` instance between `span` and second argument (1 form is the same).
+//!
+//! #### Note attachments
+//!
+//! 3.  Every macro can have "note" attachments (only 2 and 3 form).
+//!   ```ignore
+//!   let opt_help = if have_some_info { Some("did you mean `this`?") } else { None };
+//!
+//!   abort!(
+//!       span, message; // <--- attachments start with `;` (semicolon)
+//!       help = "format {} {}", "arg1", "arg2"; // <--- every attachment ends with `;`,
+//!                                              // maybe except the last one
+//!
+//!       note = "to_string"; // <--- one arg uses `.to_string()` instead of `format!()`
+//!
+//!       yay = "I see what {} did here", "you"; // <--- "help =" and "hint =" are mapped to Diagnostic::help
+//!                                              //      anything else is Diagnostic::note
+//!
+//!       wow = note_span => "custom span"; // <--- attachments can have their own span
+//!                                         //   it takes effect only on nightly though
+//!
+//!       hint =? opt_help; // <-- "optional" attachment, get displayed only if `Some`
+//!                         // must be single `Option` expression
+//!
+//!       note =? note_span => opt_help // <-- optional attachments can have custom spans too
+//!   )
+//!   ```
+//!
+//! ### Diagnostic type
+//!
+//! [`Diagnostic`] type is intentionally designed to be API compatible with [`proc_macro2::Diagnostic`].
+//! Not all API is implemented, only the part that can be reasonably implemented on stable.
 //!
 //!
+//! [`abort!`]: macro.abort.html
+//! [`emit_warning!`]: macro.emit_warning.html
+//! [`emit_error!`]: macro.emit_error.html
+//! [`abort_call_site!`]: macro.abort_call_site.html
+//! [`emit_call_site_warning!`]: macro.emit_call_site_error.html
+//! [`emit_call_site_error!`]: macro.emit_call_site_warning.html
+//! [`diagnostic!`]: macro.diagnostic.html
+//! [proc_macro_error]: ./../proc_macro_error_attr/attr.proc_macro_error.html
+//! [`Diagnostic`]: struct.Diagnostic.html
+//! [`proc_macro::Diagnostic`]: https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html
 
 #![cfg_attr(pme_nightly, feature(proc_macro_diagnostic))]
 
@@ -38,7 +141,7 @@ use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
 
 pub mod dummy;
 
-#[cfg(not(pme_nightly))]
+#[cfg(not(any(pme_nightly, nightly_fmt)))]
 #[path = "stable.rs"]
 mod imp;
 
@@ -49,11 +152,11 @@ mod imp;
 // FIXME: this can be greatly simplified via $()?
 // as soon as MRSV hits 1.32
 
-/// Build [`Diagnostic`] instance from provided arguments.
+/// Build [`Diagnostic`](struct.Diagnostic.html) instance from provided arguments.
 ///
 /// # Syntax
 ///
-/// See [the guide][].
+/// See [the guide](index.html#guide).
 ///
 #[macro_export(local_inner_macros)]
 macro_rules! diagnostic {
@@ -100,7 +203,7 @@ macro_rules! __pme__format {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __pme__suggestions {
-    ($var:ident ;) => ();
+    ($var:ident) => ();
 
     ($var:ident $help:ident =? $msg:expr) => {
         let $var = if let Some(msg) = $msg {
@@ -168,23 +271,7 @@ macro_rules! __pme__suggestions {
 ///
 /// # Syntax
 ///
-/// This macro is meant to be a `panic!` drop-in replacement so its
-/// syntax is very similar to `panic!`, but it has three forms instead of two:
-///
-/// 1. "panic-format-like" form: `abort!(span_expr, format_str_literal [, format_args...])
-///
-///     First argument is a span, all the rest is passed to [`format!`] to build the error message.
-///
-/// 2. "panic-single-arg-like" form: `abort!(span_expr, error_expr)`
-///
-///     First argument is a span, the second is the error message, it must implement [`ToString`].
-///
-/// 3. `MacroError::abort`-like form: `abort!(error_expr)`
-///
-///     Literally `MacroError::from(arg).abort()`. It's here just for convenience so [`abort!`]
-///     can be used with instances of [`syn::Error`], [`MacroError`], [`&str`], [`String`]
-///     and so on...
-///
+/// See [the guide](index.html#guide).
 #[macro_export]
 macro_rules! abort {
     ($err:expr) => {
@@ -201,7 +288,7 @@ macro_rules! abort {
 ///
 /// # Syntax
 ///
-/// See [the guide][].
+/// See [the guide](index.html#guide).
 ///
 #[macro_export]
 macro_rules! abort_call_site {
@@ -219,7 +306,7 @@ macro_rules! abort_call_site {
 ///
 /// # Syntax
 ///
-/// See [the guide][].
+/// See [the guide](index.html#guide).
 ///
 #[macro_export]
 macro_rules! emit_error {
@@ -237,13 +324,48 @@ macro_rules! emit_error {
 ///
 /// # Syntax
 ///
-/// See [the guide][].
+/// See [the guide](index.html#guide).
 ///
 #[macro_export]
 macro_rules! emit_call_site_error {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span()::call_site();
         $crate::diagnostic!(span, $crate::Level::Error, $($tts)*).emit()
+    }};
+}
+
+/// Emit an error while not aborting the proc-macro right away.
+///
+/// The emitted errors will be converted to a `TokenStream` sequence
+/// of `compile_error!` invocations after the execution hits the end
+/// of the function marked with `[proc_macro_error]`.
+///
+/// **Does nothing on stable**
+///
+/// # Syntax
+///
+/// See [the guide](index.html#guide).
+///
+#[macro_export]
+macro_rules! emit_warning {
+    ($span:expr, $($tts:tt)*) => {
+        $crate::diagnostic!($span, $crate::Level::Warning, $($tts)*).emit()
+    };
+}
+
+/// Shortcut for `emit_warning!(Span::call_site(), ...)`.
+///
+/// **Does nothing on stable**
+///
+/// # Syntax
+///
+/// See [the guide](index.html#guide).
+///
+#[macro_export]
+macro_rules! emit_call_site_warning {
+    ($($tts:tt)*) => {{
+        let span = $crate::proc_macro2::Span()::call_site();
+        $crate::diagnostic!(span, $crate::Level::Warning, $($tts)*).emit()
     }};
 }
 
@@ -372,7 +494,7 @@ impl Diagnostic {
 
 /// Abort macro execution and display all the emitted errors, if any.
 ///
-/// Does nothing if no errors were emitted.
+/// Does nothing if no errors were emitted (warnings do not count).
 pub fn abort_if_dirty() {
     imp::abort_if_dirty();
 }

@@ -1,4 +1,4 @@
-# v0.4.0 (2019-11-3)
+# v0.4.0 (2019-11-6)
 
 ## New features
 * "help" messages that can have their own span on nightly, they
@@ -13,23 +13,25 @@
         note = note_span => "don't forget the note, {}", "would you?" // notes can have their own span but it's effective only on nightly
     )
     ```
-* Warnings. Nightly only, they're ignored on stable.
+* Warnings via `emit_warning` and `emit_warning_call_site`. Nightly only, they're ignored on stable.
 * Now `proc-macro-error` delegates to `proc_macro::Diagnostic` on nightly.
 
 ## Breaking changes
-* `MacroError` is now replaced by `Diagnostic` which is made in builder-like style.
-* `Diagnostic` does not implement `From<&str/String>` so `Result<T, String>::abort_or_exit()`
-    won't work anymore.
-* `macro_error!` macro is replaced with `diag_error`/`diag_warning` pair.
+* `MacroError` is now replaced by `Diagnostic`. Its API resembles `proc_macro::Diagnostic`.
+* `Diagnostic` does not implement `From<&str/String>` so `Result<T, &str/String>::abort_or_exit()`
+    won't work anymore (nobody used it anyway).
+* `macro_error!` macro is replaced with `diagnostic!`.
 
 ## Improvements
-
+* Now `proc-macro-error` renders notes exactly just like rustc does.
+* We don't parse a body of a function annotated with `#[proc_macro_error]` anymore,
+  only looking at the signature. This should somewhat decrease expansion time for large functions.
 
 # v0.3.3 (2019-10-16)
-* Now you can use any word instead of "help"
+* Now you can use any word instead of "help", undocumented.
 
 # v0.3.2 (2019-10-16)
-* Introduced support for "help" messages
+* Introduced support for "help" messages, undocumented.
 
 # v0.3.0 (2019-10-8)
 

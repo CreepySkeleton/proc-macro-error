@@ -14,11 +14,9 @@ use syn_mid::{Block, ItemFn};
 
 use self::Setting::*;
 
-/// **Either this attribute or [`proc_macro_error::entry_point`][ep] MUST be present
-/// on the top level of your macro.**
+/// **This attribute MUST be present on the top level of your macro.**
 ///
-/// This attribute helps you build the right [`entry_point`][ep] invocation while
-/// keeping the indentation level.
+/// This attribute performs the setup and cleanup necessary to make things work.
 ///
 /// # Syntax
 ///

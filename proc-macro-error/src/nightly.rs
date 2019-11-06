@@ -16,9 +16,6 @@ pub(crate) fn cleanup() -> Vec<Diagnostic> {
 }
 
 pub(crate) fn emit_diagnostic(diag: Diagnostic) {
-    IS_DIRTY.store(true, Ordering::SeqCst);
-
-    #[allow(unused)]
     let Diagnostic {
         level,
         span,
@@ -26,7 +23,16 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
         suggestions,
     } = diag;
 
-    let mut res = PDiag::spanned(span.unwrap(), PLevel::from(level), msg);
+    let level = match level {
+        Level::Warning => PLevel::Warning,
+        Level::Error => {
+            IS_DIRTY.store(true, Ordering::SeqCst);
+            PLevel::Error
+        }
+        _ => unreachable!(),
+    };
+
+    let mut res = PDiag::spanned(span.unwrap(), level, msg);
 
     for (kind, msg, span) in suggestions {
         res = match (kind, span) {
@@ -38,16 +44,6 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
     }
 
     res.emit()
-}
-
-impl From<Level> for PLevel {
-    fn from(level: Level) -> PLevel {
-        match level {
-            Level::Warning => PLevel::Warning,
-            Level::Error => PLevel::Error,
-            _ => unreachable!(),
-        }
-    }
 }
 
 static IS_DIRTY: AtomicBool = AtomicBool::new(false);

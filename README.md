@@ -17,6 +17,21 @@ proc-macro-error = "0.4"
 
 [Documentation and guide](https://docs.rs/proc-macro-error)
 
+## What emitted errors look like
+
+```
+error: multiple error part: multi2
+
+  = note: help message test
+  = help: Option help test
+  = note: I see what you did here...
+
+ --> $DIR/multi-error.rs:4:18
+  |
+4 | make_fn!(multi1, multi2, _, multi3);
+  |                  ^^^^^^
+```
+
 ## Examples
 
 ### Panic-like usage

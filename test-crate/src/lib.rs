@@ -104,7 +104,7 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     "multiple error part: {}", part;
                     note = "help {} test", "message";
                     hint =? help;
-                    wow = "excitement";
+                    wow = "I see what you did here...";
                     help =? no_help
                 )
             }
