@@ -5,12 +5,11 @@ extern crate syn;
 extern crate proc_macro;
 
 use proc_macro2::Span;
-use proc_macro_error::{proc_macro_error, set_dummy, OptionExt, ResultExt};
+use proc_macro_error::{set_dummy, Level, OptionExt, ResultExt};
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     spanned::Spanned,
-    token::Underscore,
     Ident,
 };
 
@@ -32,8 +31,8 @@ impl Parse for IdentOrUnderscore {
         if la.peek(Ident) {
             let t = input.parse::<Ident>().unwrap();
             Ok(IdentOrUnderscore::new(t.span(), t.to_string()))
-        } else if la.peek(Underscore) {
-            let t = input.parse::<Underscore>().unwrap();
+        } else if la.peek(Token![_]) {
+            let t = input.parse::<Token![_]>().unwrap();
             Ok(IdentOrUnderscore::new(t.span(), "_".to_string()))
         } else {
             Err(la.error())
@@ -69,7 +68,9 @@ pub fn make_fn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 help = "help {} test", "message"
             ),
 
-            "direct_abort" => diagnostic!(arg.span, "direct MacroError::abort() test").abort(),
+            "direct_abort" => {
+                diagnostic!(arg.span, Level::Error, "direct MacroError::abort() test").abort()
+            }
 
             "result_expect" => {
                 let e = syn::Error::new(arg.span, "error");

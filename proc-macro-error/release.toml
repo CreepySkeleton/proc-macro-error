@@ -1,6 +1,0 @@
-pre-release-commit-message = "v{{version}}"
-tag-message = "v{{version}}"
-tag-name = "v{{version}}"
-pre-release-replacements = [
-    { file = "../CHANGELOG.md", search = "# [Unreleased]", replace = "# v{{version}} ({{date}})"}
-]

@@ -1,10 +1,8 @@
 error: multiple error part: multi1
 
-  note: help message test
-
-  help: Option help test
-
-  note: excitement
+  = note: help message test
+  = help: Option help test
+  = note: excitement
 
  --> $DIR/multi-error.rs:4:10
   |
@@ -13,11 +11,9 @@ error: multiple error part: multi1
 
 error: multiple error part: multi2
 
-  note: help message test
-
-  help: Option help test
-
-  note: excitement
+  = note: help message test
+  = help: Option help test
+  = note: excitement
 
  --> $DIR/multi-error.rs:4:18
   |
@@ -26,11 +22,9 @@ error: multiple error part: multi2
 
 error: multiple error part: multi3
 
-  note: help message test
-
-  help: Option help test
-
-  note: excitement
+  = note: help message test
+  = help: Option help test
+  = note: excitement
 
  --> $DIR/multi-error.rs:4:29
   |

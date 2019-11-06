@@ -125,7 +125,7 @@ thread_local! {
 /// Sets dummy token stream which will be appended to `compile_error!(msg);...`
 /// invocations in case you'll emit any errors.
 ///
-/// See [module level docs for usage example][self].
+/// See [guide][].
 pub fn set_dummy(dummy: TokenStream) -> Option<TokenStream> {
     check_correctness();
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(Some(dummy)))

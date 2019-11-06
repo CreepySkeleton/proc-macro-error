@@ -1,3 +1,30 @@
+# v0.4.0 (2019-11-3)
+
+## New features
+* "help" messages that can have their own span on nightly, they
+    inherit parent span on stable.
+    ```rust
+    let cond_help = if condition { Some("some help message") else { None } };
+    abort!(
+        span, // parent span
+        "something's wrong, {} wrongs in total", 10; // main message
+        help = "here's a help for you, {}", "take it"; // unconditional help message
+        help =? cond_help; // conditional help message, must be Option
+        note = note_span => "don't forget the note, {}", "would you?" // notes can have their own span but it's effective only on nightly
+    )
+    ```
+* Warnings. Nightly only, they're ignored on stable.
+* Now `proc-macro-error` delegates to `proc_macro::Diagnostic` on nightly.
+
+## Breaking changes
+* `MacroError` is now replaced by `Diagnostic` which is made in builder-like style.
+* `Diagnostic` does not implement `From<&str/String>` so `Result<T, String>::abort_or_exit()`
+    won't work anymore.
+* `macro_error!` macro is replaced with `diag_error`/`diag_warning` pair.
+
+## Improvements
+
+
 # v0.3.3 (2019-10-16)
 * Now you can use any word instead of "help"
 
