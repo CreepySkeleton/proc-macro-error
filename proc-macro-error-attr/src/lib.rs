@@ -116,7 +116,7 @@ impl Parse for Settings {
 
 impl Settings {
     fn is_set(&self, setting: Setting) -> bool {
-        self.0.iter().any(|s| **s == setting)
+        self.0.iter().any(|s| *s == setting)
     }
 
     fn set(&mut self, setting: Setting) {
