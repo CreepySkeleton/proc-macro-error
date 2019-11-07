@@ -1,4 +1,4 @@
-#[rustversion::attr(not(stable), ignore)]
+#[rustversion::attr(any(not(stable), before(1.39)), ignore)]
 #[test]
 fn ui() {
     let t = trybuild::TestCases::new();
