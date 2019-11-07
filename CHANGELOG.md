@@ -1,5 +1,9 @@
-# v0.4.1 (2019-11-7)
-* Fixed `__pme__suggestions not found` fug
+# v0.4.2 (2019-11-7)
+* FINALLY fixed `__pme__suggestions not found` bug
+
+
+# v0.4.1 (2019-11-7) YANKED
+* Fixed `__pme__suggestions not found` bug
 * Documentation improvements, links checked
 
 # v0.4.0 (2019-11-6) YANKED
