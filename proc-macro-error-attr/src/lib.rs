@@ -63,7 +63,7 @@ pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
     let body = gen_body(block, settings);
 
     quote!(
-        #(#attrs),*
+        #(#attrs)*
         #vis
         #constness
         #asyncness
