@@ -211,7 +211,7 @@ mod imp;
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! diagnostic {
     // from alias
     ($err:expr) => { $crate::Diagnostic::from($err) };
@@ -221,15 +221,15 @@ macro_rules! diagnostic {
         let diag = $crate::Diagnostic::spanned(
             $span.into(),
             $level,
-            __pme__format!($fmt, $($args),*)
+            format!($fmt, $($args),*)
         );
-        __pme__suggestions!(diag $($rest)*);
+        $crate::__pme__suggestions!(diag $($rest)*);
         diag
     }};
 
     ($span:expr, $level:expr, $msg:expr ; $($rest:tt)+) => {{
         let diag = $crate::Diagnostic::spanned($span.into(), $level, $msg.to_string());
-        __pme__suggestions!(diag $($rest)*);
+        $crate::__pme__suggestions!(diag $($rest)*);
         diag
     }};
 
@@ -238,19 +238,13 @@ macro_rules! diagnostic {
         $crate::Diagnostic::spanned(
             $span.into(),
             $level,
-            __pme__format!($fmt, $($args),*)
+            format!($fmt, $($args),*)
         )
     }};
 
     ($span:expr, $level:expr, $msg:expr) => {{
         $crate::Diagnostic::spanned($span.into(), $level, $msg.to_string())
     }};
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __pme__format {
-    ($($args:tt)*) => {format!($($args)*)};
 }
 
 #[doc(hidden)]
@@ -274,12 +268,12 @@ macro_rules! __pme__suggestions {
     };
 
     ($var:ident $help:ident =? $msg:expr ; $($rest:tt)*) => {
-        __pme__suggestions!($var $help =? $msg);
-        __pme__suggestions!($var $($rest)*);
+        $crate::__pme__suggestions!($var $help =? $msg);
+        $crate::__pme__suggestions!($var $($rest)*);
     };
     ($var:ident $help:ident =? $span:expr => $msg:expr ; $($rest:tt)*) => {
-        __pme__suggestions!($var $help =? $span => $msg);
-        __pme__suggestions!($var $($rest)*);
+        $crate::__pme__suggestions!($var $help =? $span => $msg);
+        $crate::__pme__suggestions!($var $($rest)*);
     };
 
     ($var:ident $help:ident = $msg:expr) => {
@@ -303,20 +297,20 @@ macro_rules! __pme__suggestions {
     };
 
     ($var:ident $help:ident = $msg:expr ; $($rest:tt)*) => {
-        __pme__suggestions!($var $help = $msg);
-        __pme__suggestions!($var $($rest)*);
+        $crate::__pme__suggestions!($var $help = $msg);
+        $crate::__pme__suggestions!($var $($rest)*);
     };
     ($var:ident $help:ident = $fmt:expr, $($args:expr),* ; $($rest:tt)*) => {
-        __pme__suggestions!($var $help = $fmt, $($args),*);
-        __pme__suggestions!($var $($rest)*);
+        $crate::__pme__suggestions!($var $help = $fmt, $($args),*);
+        $crate::__pme__suggestions!($var $($rest)*);
     };
     ($var:ident $help:ident = $span:expr => $msg:expr ; $($rest:tt)*) => {
-        __pme__suggestions!($var $help = $span => $msg);
-        __pme__suggestions!($var $($rest)*);
+        $crate::__pme__suggestions!($var $help = $span => $msg);
+        $crate::__pme__suggestions!($var $($rest)*);
     };
     ($var:ident $help:ident = $span:expr => $fmt:expr, $($args:expr),* ; $($rest:tt)*) => {
-        __pme__suggestions!($var $help = $span => $fmt, $($args),*);
-        __pme__suggestions!($var $($rest)*);
+        $crate::__pme__suggestions!($var $help = $span => $fmt, $($args),*);
+        $crate::__pme__suggestions!($var $($rest)*);
     };
 }
 
@@ -325,7 +319,7 @@ macro_rules! __pme__suggestions {
 /// # Syntax
 ///
 /// See [the guide](index.html#guide).
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! abort {
     ($err:expr) => {
         $crate::diagnostic!($err).abort()
@@ -343,12 +337,15 @@ macro_rules! abort {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! abort_call_site {
-    ($($tts:tt)*) => {{
-        let span = $crate::proc_macro2::Span::call_site();
-        $crate::diagnostic!(span, $crate::Level::Error, $($tts)*).abort()
-    }};
+    ($($tts:tt)*) => {
+        $crate::diagnostic!(
+            $crate::proc_macro2::Span::call_site(),
+            $crate::Level::Error,
+            $($tts)*
+        ).abort()
+    };
 }
 
 /// Emit an error while not aborting the proc-macro right away.
@@ -357,7 +354,7 @@ macro_rules! abort_call_site {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! emit_error {
     ($err:expr) => {
         $crate::diagnostic!($err).emit()
@@ -375,12 +372,15 @@ macro_rules! emit_error {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! emit_call_site_error {
-    ($($tts:tt)*) => {{
-        let span = $crate::proc_macro2::Span()::call_site();
-        $crate::diagnostic!(span, $crate::Level::Error, $($tts)*).emit()
-    }};
+    ($($tts:tt)*) => {
+        $crate::diagnostic!(
+            $crate::proc_macro2::Span()::call_site(),
+            $crate::Level::Error,
+            $($tts)*
+        ).emit()
+    };
 }
 
 /// Emit a warning. Warnings are not errors and compilation won't fail because of them.
@@ -391,7 +391,7 @@ macro_rules! emit_call_site_error {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! emit_warning {
     ($span:expr, $($tts:tt)*) => {
         $crate::diagnostic!($span, $crate::Level::Warning, $($tts)*).emit()
@@ -406,7 +406,7 @@ macro_rules! emit_warning {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! emit_call_site_warning {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span()::call_site();
