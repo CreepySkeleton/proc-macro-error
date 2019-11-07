@@ -14,7 +14,6 @@ use syn_mid::{Block, ItemFn};
 
 use self::Setting::*;
 
-
 #[proc_macro_attribute]
 pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
@@ -117,7 +116,7 @@ impl Parse for Settings {
 
 impl Settings {
     fn is_set(&self, setting: Setting) -> bool {
-        self.0.iter().find(|s| **s == setting).is_some()
+        self.0.iter().any(|s| **s == setting)
     }
 
     fn set(&mut self, setting: Setting) {

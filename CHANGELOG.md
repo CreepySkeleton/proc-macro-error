@@ -1,4 +1,8 @@
-# v0.4.0 (2019-11-6)
+# v0.4.1 (2019-11-7)
+* Fixed `__pme__suggestions not found` fug
+* Documentation improvements, links checked
+
+# v0.4.0 (2019-11-6) YANKED
 
 ## New features
 * "help" messages that can have their own span on nightly, they
