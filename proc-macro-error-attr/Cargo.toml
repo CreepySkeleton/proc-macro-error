@@ -1,6 +1,6 @@
 [package]
 name = "proc-macro-error-attr"
-version = "0.4.1"
+version = "0.4.3"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 edition = "2018"
 description = "attribute macro for proc-macro-error crate"
@@ -16,7 +16,3 @@ proc-macro2 = "1"
 syn = { version = "1", default-features = false, features = ["derive", "parsing", "proc-macro"] }
 syn-mid = "0.4"
 rustversion = "1.0"
-
-[dev-dependencies]
-trybuild = "1.0"
-toml = "=0.5.2" # DO NOT BUMP!!!
