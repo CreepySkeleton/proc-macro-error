@@ -17,32 +17,33 @@
 //! ### Macros
 //!
 //! First of all - **all the emitting-related API must be used within a function
-//! annotated with [`#[proc_macro_error]`][proc_macro_error] attribute**. You'll just get a
+//! annotated with [`#[proc_macro_error]`](#proc_macro_error-attribute) attribute**. You'll just get a
 //! panic otherwise, no errors will be shown.
 //!
 //! For most of the time you will be using macros.
 //!
 //! - [`abort!`]:
 //!
-//!     Very much panic-like usage - abort execution and show the error. Expands to `!` (never type).
+//!     Very much panic-like usage - abort execution and show the error. Expands to [`!`] (never type).
 //!
 //! - [`abort_call_site!`]:
 //!
-//!     Shortcut for `abort!(Span::call_site(), ...)`. Expands to `!` (never type).
+//!     Shortcut for `abort!(Span::call_site(), ...)`. Expands to [`!`] (never type).
 //!
 //! - [`emit_error!`]:
 //!
 //!     [`proc_macro::Diagnostic`]-like usage - emit the error but do not abort the macro.
-//!     The compilation will fail nonetheless. Expands to `()` (unit type).
+//!     The compilation will fail nonetheless. Expands to [`()`] (unit type).
 //!
 //! - [`emit_call_site_error!`]:
 //!
-//!     Shortcut for `emit_error!(Span::call_site(), ...)`. Expands to `()` (unit type).
+//!     Shortcut for `emit_error!(Span::call_site(), ...)`. Expands to [`()`] (unit type).
 //!
 //! - [`emit_warning!`]:
 //!
-//!     Like `emit_error!` but emit a warning instead of error. The compilation will succeed.
-//!     Expands to `()` (unit type).
+//!     Like `emit_error!` but emit a warning instead of error. The compilation won't fail
+//!     because of warnings.
+//!     Expands to [`()`] (unit type).
 //!
 //!     **Beware**: warnings are nightly only, they are completely ignored on stable.
 //!
@@ -87,8 +88,9 @@
 //!
 //!   abort!(
 //!       span, message; // <--- attachments start with `;` (semicolon)
+//!
 //!       help = "format {} {}", "arg1", "arg2"; // <--- every attachment ends with `;`,
-//!                                              // maybe except the last one
+//!                                              //      maybe except the last one
 //!
 //!       note = "to_string"; // <--- one arg uses `.to_string()` instead of `format!()`
 //!
@@ -96,18 +98,65 @@
 //!                                              //      anything else is Diagnostic::note
 //!
 //!       wow = note_span => "custom span"; // <--- attachments can have their own span
-//!                                         //   it takes effect only on nightly though
+//!                                         //      it takes effect only on nightly though
 //!
 //!       hint =? opt_help; // <-- "optional" attachment, get displayed only if `Some`
-//!                         // must be single `Option` expression
+//!                         //     must be single `Option` expression
 //!
 //!       note =? note_span => opt_help // <-- optional attachments can have custom spans too
 //!   )
 //!   ```
 //!
+//! ### `#[proc_macro_error]` attribute
+//!
+//! **This attribute MUST be present on the top level of your macro.**
+//!
+//! This attribute performs the setup and cleanup necessary to make things work.
+//!
+//! #### Syntax
+//!
+//! `#[proc_macro_error]` or `#[proc_macro_error(settings...)]`, where `settings...`
+//! is a comma-separated list of:
+//!
+//! - `proc_macro_hack`:
+//!
+//!     To correctly cooperate with `#[proc_macro_hack]` `#[proc_macro_error]`
+//!     attribute must be placed *before* (above) it, like this:
+//!
+//!     ```ignore
+//!     #[proc_macro_error]
+//!     #[proc_macro_hack]
+//!     #[proc_macro]
+//!     fn my_macro(input: TokenStream) -> TokenStream {
+//!         unimplemented!()
+//!     }
+//!     ```
+//!
+//!     If, for some reason, you can't place it like that you can use
+//!     `#[proc_macro_error(proc_macro_hack)]` instead.
+//!
+//! - `allow_not_macro`:
+//!
+//!     By default, the attribute checks that it's applied to a proc-macro.
+//!     If none of `#[proc_macro]`, `#[proc_macro_derive]` nor `#[proc_macro_attribute]` are
+//!     present it will panic. It's the intention - this crate is supposed to be used only with
+//!     proc-macros. This setting is made to bypass the check, useful in certain
+//!     circumstances.
+//!
+//!     Please note: the function this attribute is applied to must return `proc_macro::TokenStream`.
+//!
+//! - `assert_unwind_safe`:
+//!
+//!     By default, your code must be [unwind safe]. If your code is not unwind safe but you believe
+//!     it's correct you can use this setting to bypass the check. This is typically needed
+//!     for code that uses `lazy_static` or `thread_local` with `Cell/RefCell` inside.
+//!
+//!     This setting is implied if `#[proc_macro_error]` is applied to a function
+//!     marked as `#[proc_macro]`, `#[proc_macro_derive]` or `#[proc_macro_attribute]`.
+//!
 //! ### Diagnostic type
 //!
-//! [`Diagnostic`] type is intentionally designed to be API compatible with [`proc_macro2::Diagnostic`].
+//! [`Diagnostic`] type is intentionally designed to be API compatible with [`proc_macro::Diagnostic`].
 //! Not all API is implemented, only the part that can be reasonably implemented on stable.
 //!
 //!
@@ -121,8 +170,12 @@
 //! [proc_macro_error]: ./../proc_macro_error_attr/attr.proc_macro_error.html
 //! [`Diagnostic`]: struct.Diagnostic.html
 //! [`proc_macro::Diagnostic`]: https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html
+//! [unwind safe]: https://doc.rust-lang.org/std/panic/trait.UnwindSafe.html#what-is-unwind-safety
+//! [`!`]: https://doc.rust-lang.org/std/primitive.never.html
+//! [`()`]: https://doc.rust-lang.org/std/primitive.unit.html
 
 #![cfg_attr(pme_nightly, feature(proc_macro_diagnostic))]
+#![forbid(unsafe_code)]
 
 // reexports for use in macros
 #[doc(hidden)]
@@ -272,7 +325,7 @@ macro_rules! __pme__suggestions {
 /// # Syntax
 ///
 /// See [the guide](index.html#guide).
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! abort {
     ($err:expr) => {
         $crate::diagnostic!($err).abort()
@@ -284,13 +337,13 @@ macro_rules! abort {
 }
 
 /// Shortcut for `abort!(Span::call_site(), msg...)`. This macro
-/// is still preferable over plain panic, see [Motivation](#motivation)
+/// is still preferable over plain panic, panics are not for error reporting.
 ///
 /// # Syntax
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! abort_call_site {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span::call_site();
@@ -300,15 +353,11 @@ macro_rules! abort_call_site {
 
 /// Emit an error while not aborting the proc-macro right away.
 ///
-/// The emitted errors will be converted to a `TokenStream` sequence
-/// of `compile_error!` invocations after the execution hits the end
-/// of the function marked with `[proc_macro_error]`.
-///
 /// # Syntax
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! emit_error {
     ($err:expr) => {
         $crate::diagnostic!($err).emit()
@@ -320,13 +369,13 @@ macro_rules! emit_error {
 }
 
 /// Shortcut for `emit_error!(Span::call_site(), ...)`. This macro
-/// is still preferable over plain panic, see [Motivation](#motivation).
+/// is still preferable over plain panic, panics are not for error reporting..
 ///
 /// # Syntax
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! emit_call_site_error {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span()::call_site();
@@ -334,11 +383,7 @@ macro_rules! emit_call_site_error {
     }};
 }
 
-/// Emit an error while not aborting the proc-macro right away.
-///
-/// The emitted errors will be converted to a `TokenStream` sequence
-/// of `compile_error!` invocations after the execution hits the end
-/// of the function marked with `[proc_macro_error]`.
+/// Emit a warning. Warnings are not errors and compilation won't fail because of them.
 ///
 /// **Does nothing on stable**
 ///
@@ -346,7 +391,7 @@ macro_rules! emit_call_site_error {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! emit_warning {
     ($span:expr, $($tts:tt)*) => {
         $crate::diagnostic!($span, $crate::Level::Warning, $($tts)*).emit()
@@ -361,7 +406,7 @@ macro_rules! emit_warning {
 ///
 /// See [the guide](index.html#guide).
 ///
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! emit_call_site_warning {
     ($($tts:tt)*) => {{
         let span = $crate::proc_macro2::Span()::call_site();
@@ -391,26 +436,26 @@ pub struct Diagnostic {
     suggestions: Vec<(SuggestionKind, String, Option<Span>)>,
 }
 
-/// This traits expands [`Result<T, Into<Diagnostic>>`](Diagnostic) with some handy shortcuts.
+/// This traits expands `Result<T, Into<Diagnostic>>` with some handy shortcuts.
 pub trait ResultExt {
     type Ok;
 
-    /// Behaves like [`Result::unwrap`]: if self is `Ok` yield the contained value,
-    /// otherwise abort macro execution via [`abort!`].
+    /// Behaves like `Result::unwrap`: if self is `Ok` yield the contained value,
+    /// otherwise abort macro execution via `abort!`.
     fn unwrap_or_abort(self) -> Self::Ok;
 
-    /// Behaves like [`Result::expect`]: if self is `Ok` yield the contained value,
-    /// otherwise abort macro execution via [`abort!`].
+    /// Behaves like `Result::expect`: if self is `Ok` yield the contained value,
+    /// otherwise abort macro execution via `abort!`.
     /// If it aborts then resulting error message will be preceded with `message`.
     fn expect_or_abort(self, msg: &str) -> Self::Ok;
 }
 
-/// This traits expands [`Option<T>`][std::option::Option] with some handy shortcuts.
+/// This traits expands `Option` with some handy shortcuts.
 pub trait OptionExt {
     type Some;
 
-    /// Behaves like [`Option::expect`]: if self is `Some` yield the contained value,
-    /// otherwise abort macro execution via [`abort_call_site!`].
+    /// Behaves like `Option::expect`: if self is `Some` yield the contained value,
+    /// otherwise abort macro execution via `abort_call_site!`.
     /// If it aborts the `message` will be used for [`compile_error!`][compl_err] invocation.
     ///
     /// [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
@@ -620,7 +665,7 @@ impl From<syn::Error> for Diagnostic {
 
 /// This is the entry point for a proc-macro.
 ///
-/// **NOT PUBLIC API, SUBJECT TO CHANGE WITHOUT NOTICE**
+/// **NOT PUBLIC API, SUBJECT TO CHANGE WITHOUT ANY NOTICE**
 #[doc(hidden)]
 pub fn entry_point<F>(f: F, proc_macro_hack: bool) -> proc_macro::TokenStream
 where

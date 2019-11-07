@@ -15,7 +15,7 @@ proc-macro-error = "0.4"
 
 *Supports rustc 1.31 and up*
 
-[Documentation and guide](https://docs.rs/proc-macro-error)
+[Documentation and guide][guide]
 
 ## What emitted errors look like
 
@@ -171,7 +171,7 @@ That said, we need a solution, but this solution must meet these conditions:
 
 This crate aims to provide such a mechanism. All you have to do is annotate your top-level
 `#[proc_macro]` function with `#[proc_macro_errors]` attribute and change panics to
-[`abort!`]/[`abort_call_site!`] where appropriate, see [the Guide][].
+[`abort!`]/[`abort_call_site!`] where appropriate, see [the Guide][guide].
 
 ## Disclaimer
 Please note that **this crate is not intended to be used in any way other
@@ -196,10 +196,11 @@ be dual licensed as above, without any additional terms or conditions.
 
 
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
-[`proc_macro::Diagnostic`]: (https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html)
+[`proc_macro::Diagnostic`]: https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html
 
-[crate::dummy]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/dummy/index.html
-[crate::multi]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/multi/index.html
+[crate::dummy]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/dummy/index.html
+[crate::multi]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/multi/index.html
 
-[`abort_call_site!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.abort_call_site.html
-[`abort!`]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/macro.abort.html
+[`abort_call_site!`]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/macro.abort_call_site.html
+[`abort!`]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/macro.abort.html
+[guide]: https://docs.rs/proc-macro-error

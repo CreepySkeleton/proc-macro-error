@@ -14,52 +14,7 @@ use syn_mid::{Block, ItemFn};
 
 use self::Setting::*;
 
-/// **This attribute MUST be present on the top level of your macro.**
-///
-/// This attribute performs the setup and cleanup necessary to make things work.
-///
-/// # Syntax
-///
-/// `#[proc_macro_error]` or `#[proc_macro_error(settings...)]`, where `settings...`
-/// is a comma-separated list of:
-///
-/// - `proc_macro_hack`:
-///
-///     To correctly cooperate with `#[proc_macro_hack]` `#[proc_macro_error]`
-///     attribute must be placed *before* (above) it, like this:
-///
-///     ```ignore
-///     #[proc_macro_error]
-///     #[proc_macro_hack]
-///     #[proc_macro]
-///     fn my_macro(input: TokenStream) -> TokenStream {
-///         unimplemented!()
-///     }
-///     ```
-///
-///     If, for some reason, you can't place it like that you can use
-///     `#[proc_macro_error(proc_macro_hack)]` instead.
-///
-/// - `allow_not_macro`:
-///
-///     By default, the attribute checks that it's applied to a proc-macro.
-///     If none of `#[proc_macro]`, `#[proc_macro_derive]` nor `#[proc_macro_attribute]` are
-///     present it will panic. It's the intention - this crate is supposed to be used only with
-///     proc-macros. This setting is made to bypass the check, useful in certain
-///     circumstances.
-///
-/// - `assert_unwind_safe`:
-///
-///     By default, your code must be [unwind safe]. If your code is not unwind safe but you believe
-///     it's correct you can use this setting to bypass the check. This is typically needed
-///     for code that uses `lazy_static` or `thread_local` with `Call/RefCell` inside.
-///
-///     This setting is implied if `#[proc_macro_error]` is placed on top of a function
-///     marked as `#[proc_macro]`, `#[proc_macro_derive]` or `#[proc_macro_attribute]`.
-///
-/// [ep]: https://docs.rs/proc-macro-error/0.3/proc_macro_error/fn.entry_point.html
-/// [unwind safe]: https://doc.rust-lang.org/std/panic/trait.UnwindSafe.html#what-is-unwind-safety
-///
+
 #[proc_macro_attribute]
 pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
