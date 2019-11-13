@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use crate::{abort_now, check_correctness, Diagnostic};
+use crate::{abort_now, check_correctness, Diagnostic, Level};
 
 pub fn abort_if_dirty() {
     check_correctness();
@@ -11,13 +11,14 @@ pub fn abort_if_dirty() {
     });
 }
 
-/// Clear the global error storage, returning the errors contained.
 pub(crate) fn cleanup() -> Vec<Diagnostic> {
     ERR_STORAGE.with(|storage| storage.replace(Vec::new()))
 }
 
 pub(crate) fn emit_diagnostic(diag: Diagnostic) {
-    ERR_STORAGE.with(|storage| storage.borrow_mut().push(diag));
+    if diag.level == Level::Error {
+        ERR_STORAGE.with(|storage| storage.borrow_mut().push(diag));
+    }
 }
 
 thread_local! {

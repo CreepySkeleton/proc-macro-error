@@ -1,6 +1,9 @@
+# v0.4.4 (2019-11-13)
+* Fix `abort_if_dirty` + warnings bug
+* Allow trailing commas in macros
+
 # v0.4.2 (2019-11-7)
 * FINALLY fixed `__pme__suggestions not found` bug
-
 
 # v0.4.1 (2019-11-7) YANKED
 * Fixed `__pme__suggestions not found` bug
