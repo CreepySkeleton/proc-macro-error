@@ -135,6 +135,11 @@
 //!     If, for some reason, you can't place it like that you can use
 //!     `#[proc_macro_error(proc_macro_hack)]` instead.
 //!
+//!     # Note
+//!
+//!     If `proc-macro-hack` was detected (by any means) `allow_not_macro`
+//!     and `assert_unwind_safe` will be applied automatically.
+//!
 //! - `allow_not_macro`:
 //!
 //!     By default, the attribute checks that it's applied to a proc-macro.
@@ -145,6 +150,8 @@
 //!
 //!     Please note: the function this attribute is applied to must return `proc_macro::TokenStream`.
 //!
+//!     This setting is implied if `proc-macro-hack` was detected.
+//!
 //! - `assert_unwind_safe`:
 //!
 //!     By default, your code must be [unwind safe]. If your code is not unwind safe but you believe
@@ -153,6 +160,8 @@
 //!
 //!     This setting is implied if `#[proc_macro_error]` is applied to a function
 //!     marked as `#[proc_macro]`, `#[proc_macro_derive]` or `#[proc_macro_attribute]`.
+//!
+//!     This setting is also implied if `proc-macro-hack` was detected.
 //!
 //! ### Diagnostic type
 //!

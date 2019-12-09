@@ -34,6 +34,10 @@ pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
         settings.set(ProcMacroHack);
     }
 
+    if settings.is_set(ProcMacroHack) {
+        settings.set(AllowNotMacro);
+    }
+
     if !(settings.is_set(AllowNotMacro) || is_proc_macro) {
         return quote!(
             #input

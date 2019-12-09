@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::cell::Cell;
 
 use proc_macro::{Diagnostic as PDiag, Level as PLevel};
 
@@ -6,12 +6,13 @@ use crate::{abort_now, check_correctness, Diagnostic, Level, SuggestionKind};
 
 pub fn abort_if_dirty() {
     check_correctness();
-    if IS_DIRTY.load(Ordering::SeqCst) {
+    if IS_DIRTY.with(|c| c.get()) {
         abort_now()
     }
 }
 
 pub(crate) fn cleanup() -> Vec<Diagnostic> {
+    IS_DIRTY.with(|c| c.set(false));
     vec![]
 }
 
@@ -26,7 +27,7 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
     let level = match level {
         Level::Warning => PLevel::Warning,
         Level::Error => {
-            IS_DIRTY.store(true, Ordering::SeqCst);
+            IS_DIRTY.with(|c| c.set(true));
             PLevel::Error
         }
         _ => unreachable!(),
@@ -46,4 +47,6 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
     res.emit()
 }
 
-static IS_DIRTY: AtomicBool = AtomicBool::new(false);
+thread_local! {
+    static IS_DIRTY: Cell<bool> = Cell::new(false);
+}

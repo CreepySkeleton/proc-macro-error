@@ -1,3 +1,9 @@
+# v0.4.5 (2020-1-20)
+Just a small intermediate release.
+
+* Fix some bugs.
+* Populate license files into subfolders.
+
 # v0.4.4 (2019-11-13)
 * Fix `abort_if_dirty` + warnings bug
 * Allow trailing commas in macros
