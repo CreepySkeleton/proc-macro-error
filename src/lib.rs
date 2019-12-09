@@ -7,10 +7,13 @@
 //!
 //! ## Limitations
 //!
-//! - Warnings are emitted only on nightly, they're ignored on stable.
-//! - "help" suggestions cannot have their own span info on stable, (they inherit parent span).
+//! - Warnings are emitted only on nightly, they are ignored on stable.
+//! - "help" suggestions can't have their own span info on stable,
+//!   (essentially inheriting the parent span).
 //! - If a panic occurs somewhere in your macro no errors will be displayed. This is not a
-//!   technical limitation but intentional design, `panic` is not for error reporting.
+//!   technical limitation but rather intentional design. `panic` is not for error reporting.
+//! - Temporary incompatible with `proc_macro_hack`, unfortunately. No worries, some highly
+//!   trained people are working on it!
 //!
 //! ## Guide
 //!
@@ -20,7 +23,7 @@
 //! annotated with [`#[proc_macro_error]`](#proc_macro_error-attribute) attribute**. You'll just get a
 //! panic otherwise, no errors will be shown.
 //!
-//! For most of the time you will be using macros.
+//! Most of the time you want to use the macros.
 //!
 //! - [`abort!`]:
 //!
@@ -49,7 +52,7 @@
 //!
 //! - [`emit_call_site_warning!`]:
 //!
-//!     Shortcut for `emit_warning!(Span::call_site(), ...)`. Expands to `()` (unit type).
+//!     Shortcut for `emit_warning!(Span::call_site(), ...)`. Expands to [`()`] (unit type).
 //!
 //! - [`diagnostic`]:
 //!
@@ -62,7 +65,8 @@
 //! 1.  ```ignore
 //!     abort!(single_expr)
 //!     ```
-//!     Shortcut for `Diagnostic::from().abort()`
+//!     Shortcut for `Diagnostic::from(expr).abort()`. **There's no way to attach notes
+//!     in this form!**
 //!
 //! 2.  ```ignore
 //!     abort!(span, message)
@@ -75,8 +79,10 @@
 //!     Shortcut for `Diagnostic::spanned(span, format!(format_literal, format_args...)).abort()`
 //!
 //! That's it. `abort!`, `emit_warning`, `emit_error` share this exact syntax.
+//!
 //! `abort_call_site!`, `emit_call_site_warning`, `emit_call_site_error` lack 1 form
-//! and do not take span in 2 and 3 forms.
+//! and do not take span in 2 and 3 forms. Those are essentially shortcuts for
+//! `macro!(Span::call_site(), args...)`.
 //!
 //! `diagnostic!` require `Level` instance between `span` and second argument (1 form is the same).
 //!
@@ -145,18 +151,21 @@
 //!     By default, the attribute checks that it's applied to a proc-macro.
 //!     If none of `#[proc_macro]`, `#[proc_macro_derive]` nor `#[proc_macro_attribute]` are
 //!     present it will panic. It's the intention - this crate is supposed to be used only with
-//!     proc-macros. This setting is made to bypass the check, useful in certain
-//!     circumstances.
+//!     proc-macros.
 //!
-//!     Please note: the function this attribute is applied to must return `proc_macro::TokenStream`.
+//!     This setting is made to bypass the check, useful in certain circumstances.
+//!
+//!     Please note: the function this attribute is applied to must return
+//!     `proc_macro::TokenStream`.
 //!
 //!     This setting is implied if `proc-macro-hack` was detected.
 //!
 //! - `assert_unwind_safe`:
 //!
-//!     By default, your code must be [unwind safe]. If your code is not unwind safe but you believe
-//!     it's correct you can use this setting to bypass the check. This is typically needed
-//!     for code that uses `lazy_static` or `thread_local` with `Cell/RefCell` inside.
+//!     By default, your code must be [unwind safe]. If your code is not unwind safe,
+//!     but you believe it's correct, you can use this setting to bypass the check.
+//!     You would need this for code that uses `lazy_static` or `thread_local` with
+//!     `Cell/RefCell` inside (and the like).
 //!
 //!     This setting is implied if `#[proc_macro_error]` is applied to a function
 //!     marked as `#[proc_macro]`, `#[proc_macro_derive]` or `#[proc_macro_attribute]`.
