@@ -119,38 +119,40 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
 
 ## Limitations
 
-- Warnings are emitted only on nightly, they're ignored on stable.
-- "help" suggestions cannot have their own span info on stable, (they inherit parent span).
+- Warnings are emitted only on nightly, they are ignored on stable.
+- "help" suggestions can't have their own span info on stable,
+  (essentially inheriting the parent span).
 - If a panic occurs somewhere in your macro no errors will be displayed. This is not a
-  technical limitation but intentional design, `panic` is not for error reporting.
+  technical limitation but rather intentional design. `panic` is not for error reporting.
+- Temporary incompatible with `proc_macro_hack`, unfortunately. No worries, some highly
+  trained people are working on it!
 
 ## MSRV policy
 
-`proc_macro_error` will always be compatible with proc-macro holy trinity:
-`proc_macro2`, `syn`, `quote` crates. In other words, if the trinity is available
-to you than `proc_macro_error` is available too.
+`proc_macro_error` will always be compatible with proc-macro Holy Trinity:
+`proc_macro2`, `syn`, `quote` crates. In other words, if the Trinity is available
+to you - `proc_macro_error` is available too.
 
 ## Motivation
 
 Error handling in proc-macros sucks. There's not much of a choice today:
-you either "bubble up" the error up to the top-level of your macro and convert it to
+you either "bubble up" the error up to the top-level of the macro and convert it to
 a [`compile_error!`][compl_err] invocation or just use a good old panic. Both these ways suck:
 
 - Former sucks because it's quite redundant to unroll a proper error handling
-    just for critical errors that will crash the macro anyway so people mostly
-    choose not to bother with it at all and use panic. Almost nobody does it,
-    simple `.expect` is too tempting.
+    just for critical errors that will crash the macro anyway; so people mostly
+    choose not to bother with it at all and use panic. Simple `.expect` is too tempting.
 
     Also, if you do decide to implement this `Result`-based architecture in your macro
-    you're going to have to rewrite it entirely once [`proc_macro::Diagnostic`][] is finally stable.
-    Not cool.
+    you're going to have to rewrite it entirely once [`proc_macro::Diagnostic`][] is finally
+    stable. Not cool.
 
-- Later sucks because there's no way to carry out span info via `panic!`. `rustc` will highlight
-    the whole invocation itself but not some specific token inside it.
+- Later sucks because there's no way to carry out the span info via `panic!`.
+    `rustc` will highlight the invocation itself but not some specific token inside it.
 
     Furthermore, panics aren't for error-reporting at all; panics are for bug-detecting
     (like unwrapping on `None` or out-of-range indexing) or for early development stages
-    when you need a prototype ASAP and error handling can wait. Mixing these usages only
+    when you need a prototype ASAP so error handling can wait. Mixing these usages only
     messes things up.
 
 - There is [`proc_macro::Diagnostic`][] which is awesome but it has been experimental
@@ -165,8 +167,8 @@ That said, we need a solution, but this solution must meet these conditions:
 - It must be better than `panic!`. The main point: it must offer a way to carry span information
     over to user.
 - It must take as little effort as possible to migrate from `panic!`. Ideally, a new
-    macro with the same semantics plus ability to carry out span info. We should also keep
-    in mind the existence of [`proc_macro::Diagnostic`][] .
+    macro with the same semantics plus ability to carry out span info.
+- It must maintain compatibility with [`proc_macro::Diagnostic`][] .
 - **It must be usable on stable**.
 
 This crate aims to provide such a mechanism. All you have to do is annotate your top-level

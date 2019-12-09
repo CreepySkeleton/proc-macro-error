@@ -12,6 +12,9 @@ use syn::{
 };
 use syn_mid::{Block, ItemFn};
 
+//! This is `#[proc_macro_error]` attribute to be used with
+//! [`proc-macro-error`](https://docs.rs/proc-macro-error/). There you go.
+
 use self::Setting::*;
 
 #[proc_macro_attribute]
