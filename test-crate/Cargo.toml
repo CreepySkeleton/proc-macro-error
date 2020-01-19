@@ -6,15 +6,12 @@ edition = "2018"
 publish = false
 
 [lib]
+path = "lib.rs"
 proc-macro = true
 
 [dependencies]
-proc-macro-error = { path = "../proc-macro-error"}
+proc-macro-error = { path = "../" }
 quote = "1"
 proc-macro2 = "1"
 syn = {version = "1", default-features = false }
 
-[dev-dependencies]
-trybuild = "1.0"
-rustversion = "1.0"
-toml = "=0.5.2" # DO NOT BUMP

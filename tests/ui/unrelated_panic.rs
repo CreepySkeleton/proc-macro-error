@@ -1,6 +1,6 @@
 extern crate test_crate;
-use test_crate::make_fn;
+use test_crate::*;
 
-make_fn!();
+unrelated_panic!();
 
 fn main() {}

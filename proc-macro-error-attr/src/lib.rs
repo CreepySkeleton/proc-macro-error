@@ -1,3 +1,6 @@
+//! This is `#[proc_macro_error]` attribute to be used with
+//! [`proc-macro-error`](https://docs.rs/proc-macro-error/). There you go.
+
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
@@ -12,8 +15,6 @@ use syn::{
 };
 use syn_mid::{Block, ItemFn};
 
-//! This is `#[proc_macro_error]` attribute to be used with
-//! [`proc-macro-error`](https://docs.rs/proc-macro-error/). There you go.
 
 use self::Setting::*;
 
@@ -44,8 +45,9 @@ pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
     if !(settings.is_set(AllowNotMacro) || is_proc_macro) {
         return quote!(
             #input
-            compile_error!("#[proc_macro_error] attribute can be used only with a proc-macro\n\n  \
-                hint: if you are really sure that #[proc_macro_error] should be applied \
+            compile_error!(
+                "#[proc_macro_error] attribute can be used only with a proc-macro\n\n  \
+                = hint: if you are really sure that #[proc_macro_error] should be applied \
                 to this exact function use #[proc_macro_error(allow_not_macro)]\n");
         )
         .into();
@@ -54,34 +56,16 @@ pub fn proc_macro_error(attr: TokenStream, input: TokenStream) -> TokenStream {
     let ItemFn {
         attrs,
         vis,
-        constness,
-        asyncness,
-        unsafety,
-        abi,
-        fn_token,
-        ident,
-        generics,
-        inputs,
-        output,
+        sig,
         block,
-        ..
     } = input;
 
-    let body = gen_body(block, settings);
+    let body = gen_body(*block, settings);
 
     quote!(
         #(#attrs)*
         #vis
-        #constness
-        #asyncness
-        #unsafety
-        #abi
-        #fn_token
-        #ident
-        #generics
-        (#inputs)
-        #output
-
+        #sig
         { #body }
     )
     .into()

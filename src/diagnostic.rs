@@ -1,3 +1,5 @@
+//! This implementation uses [`proc_macro::Diagnostic`]
+
 use std::cell::Cell;
 
 use proc_macro::{Diagnostic as PDiag, Level as PLevel};

@@ -1,0 +1,23 @@
+error: abort!(span, from) test
+ --> $DIR/abort.rs:4:13
+  |
+4 | abort_from!(one, two);
+  |             ^^^
+
+error: abort!(span, single_expr) test
+ --> $DIR/abort.rs:5:18
+  |
+5 | abort_to_string!(one, two);
+  |                  ^^^
+
+error: abort!(span, expr1, expr2) test
+ --> $DIR/abort.rs:6:15
+  |
+6 | abort_format!(one, two);
+  |               ^^^
+
+error: Diagnostic::abort() test
+ --> $DIR/abort.rs:7:15
+  |
+7 | direct_abort!(one, two);
+  |               ^^^

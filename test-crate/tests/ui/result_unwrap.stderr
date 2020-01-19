@@ -1,5 +1,0 @@
-error: Result::unwrap_or_abort() test
- --> $DIR/result_unwrap.rs:4:10
-  |
-4 | make_fn!(result_unwrap);
-  |          ^^^^^^^^^^^^^

@@ -1,3 +1,6 @@
+extern crate trybuild;
+extern crate rustversion;
+
 #[rustversion::attr(any(not(stable), before(1.39)), ignore)]
 #[test]
 fn ui() {

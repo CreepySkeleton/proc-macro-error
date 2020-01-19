@@ -1,0 +1,23 @@
+error: emit!(span, from) test
+ --> $DIR/emit.rs:4:7
+  |
+4 | emit!(one, two, three, four);
+  |       ^^^
+
+error: emit!(span, expr1, expr2) test
+ --> $DIR/emit.rs:4:12
+  |
+4 | emit!(one, two, three, four);
+  |            ^^^
+
+error: emit!(span, single_expr) test
+ --> $DIR/emit.rs:4:17
+  |
+4 | emit!(one, two, three, four);
+  |                 ^^^^^
+
+error: Diagnostic::emit() test
+ --> $DIR/emit.rs:4:24
+  |
+4 | emit!(one, two, three, four);
+  |                        ^^^^

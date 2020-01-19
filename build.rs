@@ -1,11 +1,11 @@
-#[rustversion::nightly]
-fn nightly() {
-    println!("cargo:rustc-cfg=pme_nightly");
+#[rustversion::not(nightly)]
+fn check() {
+    println!("cargo:rustc-cfg=use_fallback");
 }
 
-#[rustversion::not(nightly)]
-fn nightly() {}
+#[rustversion::nightly]
+fn check() {}
 
 fn main() {
-    nightly()
+    check()
 }

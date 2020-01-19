@@ -214,12 +214,12 @@ pub mod dummy;
 
 mod macros;
 
-#[cfg(not(any(pme_nightly, nightly_fmt)))]
-#[path = "stable.rs"]
+#[cfg(use_fallback)]
+#[path = "fallback.rs"]
 mod imp;
 
-#[cfg(any(pme_nightly, nightly_fmt))]
-#[path = "nightly.rs"]
+#[cfg(not(use_fallback))]
+#[path = "diagnostic.rs"]
 mod imp;
 
 /// Represents a diagnostic level
