@@ -1,4 +1,4 @@
-//! This implementation uses [`proc_macro::Diagnostic`]
+//! This implementation uses [`proc_macro::Diagnostic`], nightly only.
 
 use std::cell::Cell;
 

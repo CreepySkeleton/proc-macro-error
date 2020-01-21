@@ -1,6 +1,7 @@
-use std::cell::RefCell;
+//! This implementation uses self-written stable facilities.
 
 use crate::{abort_now, check_correctness, Diagnostic, Level};
+use std::cell::RefCell;
 
 pub fn abort_if_dirty() {
     check_correctness();

@@ -15,7 +15,6 @@ use syn::{
 };
 use syn_mid::{Block, ItemFn};
 
-
 use self::Setting::*;
 
 #[proc_macro_attribute]

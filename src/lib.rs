@@ -100,8 +100,9 @@
 //!
 //!       note = "to_string"; // <--- one arg uses `.to_string()` instead of `format!()`
 //!
-//!       yay = "I see what {} did here", "you"; // <--- "help =" and "hint =" are mapped to Diagnostic::help
-//!                                              //      anything else is Diagnostic::note
+//!       yay = "I see what {} did here", "you"; // <--- "help =" and "hint =" are mapped
+//!                                              // to Diagnostic::help,
+//!                                              // anything else is Diagnostic::note
 //!
 //!       wow = note_span => "custom span"; // <--- attachments can have their own span
 //!                                         //      it takes effect only on nightly though
@@ -110,7 +111,7 @@
 //!                         //     must be single `Option` expression
 //!
 //!       note =? note_span => opt_help // <-- optional attachments can have custom spans too
-//!   )
+//!   );
 //!   ```
 //!
 //! ### `#[proc_macro_error]` attribute
@@ -192,7 +193,7 @@
 //! [`!`]: https://doc.rust-lang.org/std/primitive.never.html
 //! [`()`]: https://doc.rust-lang.org/std/primitive.unit.html
 
-#![cfg_attr(pme_nightly, feature(proc_macro_diagnostic))]
+#![cfg_attr(not(use_fallback), feature(proc_macro_diagnostic))]
 #![forbid(unsafe_code)]
 
 // reexports for use in macros
