@@ -2,6 +2,7 @@
 
 [![travis ci](https://travis-ci.org/CreepySkeleton/proc-macro-error.svg?branch=master)](https://travis-ci.org/CreepySkeleton/proc-macro-error)
 [![docs.rs](https://docs.rs/proc-macro-error/badge.svg)](https://docs.rs/proc-macro-error)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 
 This crate aims to make error reporting in proc-macros simple and easy to use.
 Migrate from `panic!`-based errors for as little effort as possible!
