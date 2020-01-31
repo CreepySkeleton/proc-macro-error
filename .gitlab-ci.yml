@@ -49,6 +49,5 @@ test-fmt:
   <<: *setup_template
   script:
     - cargo fmt --all -- --check
-    - RUTSFLAGS='--cfg nightly_fmt' cargo fmt --all -- --check
   variables:
     RUST_VERSION: stable

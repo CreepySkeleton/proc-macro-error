@@ -1,3 +1,8 @@
+# v0.4.6 (2020-1-31)
+
+* `From<syn::Error>` implementation doesn't lose span info anymore, see
+  [#6](https://gitlab.com/CreepySkeleton/proc-macro-error/issues/6).
+
 # v0.4.5 (2020-1-20)
 Just a small intermediate release.
 

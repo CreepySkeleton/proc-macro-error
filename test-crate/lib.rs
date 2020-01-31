@@ -129,7 +129,8 @@ pub fn emit_notes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro]
 #[proc_macro_error]
 pub fn option_ext(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    Option::<syn::Error>::None.expect_or_abort("Option::expect_or_abort() test");
+    let none: Option<syn::Error> = None;
+    none.expect_or_abort("Option::expect_or_abort() test");
     quote!().into()
 }
 
@@ -138,7 +139,8 @@ pub fn option_ext(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 pub fn result_unwrap_or_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
     let err = syn::Error::new(span.into(), "Result::unwrap_or_abort() test");
-    Result::<(), _>::Err(err).unwrap_or_abort();
+    let res: Result<(), _> = Err(err);
+    res.unwrap_or_abort();
     quote!().into()
 }
 
@@ -147,7 +149,8 @@ pub fn result_unwrap_or_abort(input: proc_macro::TokenStream) -> proc_macro::Tok
 pub fn result_expect_or_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
     let err = syn::Error::new(span.into(), "Result::expect_or_abort() test");
-    Result::<(), _>::Err(err).expect_or_abort("BOOM");
+    let res: Result<(), _> = Err(err);
+    res.expect_or_abort("BOOM");
     quote!().into()
 }
 
@@ -185,9 +188,12 @@ pub fn ok(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 // Multiple tokens
 
-// #[proc_macro_attribute]
-// #[proc_macro_error]
-// pub fn test2(_: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-//     let input = proc_macro2::TokenStream::from(input);
-//     Err(Error::new_spanned(input, "...")).unwrap_or_abort()
-// }
+#[proc_macro_attribute]
+#[proc_macro_error]
+pub fn multiple_tokens(
+    _: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let input = proc_macro2::TokenStream::from(input);
+    Err(syn::Error::new_spanned(input, "...")).unwrap_or_abort()
+}
