@@ -152,11 +152,11 @@ impl ToTokens for Diagnostic {
         }
 
         fn diag_to_tokens(
-            start: &Span,
-            end: &Span,
+            start: Span,
+            end: Span,
             level: &Level,
             msg: &str,
-            suggestions: &Vec<(SuggestionKind, String, Option<Span>)>,
+            suggestions: &[(SuggestionKind, String, Option<Span>)],
         ) -> TokenStream {
             if *level == Level::Warning {
                 return TokenStream::new();
@@ -180,21 +180,21 @@ impl ToTokens for Diagnostic {
                 Cow::Owned(message)
             };
 
-            let msg = syn::LitStr::new(&*message, *end);
-            let group = quote_spanned!(*end=> { #msg } );
-            quote_spanned!(*start=> compile_error!#group)
+            let msg = syn::LitStr::new(&*message, end);
+            let group = quote_spanned!(end=> { #msg } );
+            quote_spanned!(start=> compile_error!#group)
         }
 
         ts.extend(diag_to_tokens(
-            &self.start,
-            &self.end,
+            self.start,
+            self.end,
             &self.level,
             &self.msg,
             &self.suggestions,
         ));
         ts.extend(
             self.children.iter().map(|(start, end, msg)| {
-                diag_to_tokens(&start, &end, &Level::Error, &msg, &vec![])
+                diag_to_tokens(*start, *end, &Level::Error, &msg, &[])
             }),
         );
     }

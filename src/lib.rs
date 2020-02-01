@@ -220,6 +220,7 @@
 
 #![cfg_attr(not(use_fallback), feature(proc_macro_diagnostic))]
 #![forbid(unsafe_code)]
+#![allow(clippy::needless_doctest_main)]
 
 // reexports for use in macros
 #[doc(hidden)]
