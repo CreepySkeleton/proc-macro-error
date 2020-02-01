@@ -193,9 +193,9 @@ impl ToTokens for Diagnostic {
             &self.suggestions,
         ));
         ts.extend(
-            self.children.iter().map(|(start, end, msg)| {
-                diag_to_tokens(*start, *end, &Level::Error, &msg, &[])
-            }),
+            self.children
+                .iter()
+                .map(|(start, end, msg)| diag_to_tokens(*start, *end, &Level::Error, &msg, &[])),
         );
     }
 }
