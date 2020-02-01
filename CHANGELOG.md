@@ -1,4 +1,8 @@
-# v0.4.6 (2020-2-31)
+# v0.4.8 (2020-2-31)
+
+* Support for children messages
+
+# v0.4.7 (2020-2-31)
 
 * Now any type that implements `quote::ToTokens` can be used instead of spans.
   This allows for high quality error messages.
