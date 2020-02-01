@@ -138,6 +138,13 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
 `proc_macro2`, `syn`, `quote` crates. In other words, if the Trinity is available
 to you - `proc_macro_error` is available too.
 
+> **Important!**
+>
+> If you want to use `#[proc_macro_error]` with `synstructure`, you're going
+> to have to put the attribute inside the `decl_derive!` invocation. Unfortunately,
+> due to some bug in pre-1.34 rustc, putting proc-macro attributes inside macro
+> invocations doesn't work, so your MSRV is effectively 1.34 in cases like that.
+
 ## Motivation
 
 Error handling in proc-macros sucks. There's not much of a choice today:
