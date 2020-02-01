@@ -28,6 +28,7 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
         end,
         msg,
         suggestions,
+        children,
     } = diag;
 
     let span = start.join(end).unwrap_or(start);
@@ -50,6 +51,11 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
             (SuggestionKind::Note, None) => res.note(msg),
             (SuggestionKind::Help, None) => res.help(msg),
         }
+    }
+
+    for (start, end, msg) in children {
+        let span = start.join(end).unwrap_or(start).unwrap();
+        res = res.span_error(span, msg);
     }
 
     res.emit()

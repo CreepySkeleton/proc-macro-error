@@ -25,6 +25,7 @@ pub struct Diagnostic {
     pub(crate) end: Span,
     pub(crate) msg: String,
     pub(crate) suggestions: Vec<(SuggestionKind, String, Option<Span>)>,
+    pub(crate) children: Vec<(Span, Span, String)>,
 }
 
 impl Diagnostic {
@@ -38,7 +39,13 @@ impl Diagnostic {
         Diagnostic::double_spanned(span, span, level, message)
     }
 
-    /// Attach a "help" note to your main message, note will have it's own span on nightly.
+    /// Add another error message to self such that it will be emitted right after
+    /// the main message.
+    pub fn span_error(self, span: Span, msg: String) -> Self {
+        self.double_span_error(span, span, msg)
+    }
+
+    /// Attach a "help" note to your main message, the note will have it's own span on nightly.
     ///
     /// # Span
     ///
@@ -49,13 +56,13 @@ impl Diagnostic {
         self
     }
 
-    /// Attach a "help" note to your main message,
+    /// Attach a "help" note to your main message.
     pub fn help(mut self, msg: String) -> Self {
         self.suggestions.push((SuggestionKind::Help, msg, None));
         self
     }
 
-    /// Attach a note to your main message, note will have it's own span on nightly.
+    /// Attach a note to your main message, the note will have it's own span on nightly.
     ///
     /// # Span
     ///
@@ -97,6 +104,7 @@ impl Diagnostic {
     }
 }
 
+/// **NOT PUBLIC API! NOTHING TO SEE HERE!!!**
 #[doc(hidden)]
 impl Diagnostic {
     pub fn double_spanned(start: Span, end: Span, level: Level, message: String) -> Self {
@@ -106,7 +114,13 @@ impl Diagnostic {
             end,
             msg: message,
             suggestions: vec![],
+            children: vec![],
         }
+    }
+
+    pub fn double_span_error(mut self, start: Span, end: Span, msg: String) -> Self {
+        self.children.push((start, end, msg));
+        self
     }
 
     pub fn span_suggestion(self, span: Span, suggestion: &str, msg: String) -> Self {
@@ -137,39 +151,52 @@ impl ToTokens for Diagnostic {
             }
         }
 
-        let Diagnostic {
-            ref msg,
-            ref suggestions,
-            ref level,
-            ..
-        } = *self;
+        fn diag_to_tokens(
+            start: &Span,
+            end: &Span,
+            level: &Level,
+            msg: &str,
+            suggestions: &Vec<(SuggestionKind, String, Option<Span>)>,
+        ) -> TokenStream {
+            if *level == Level::Warning {
+                return TokenStream::new();
+            }
 
-        if *level == Level::Warning {
-            return;
+            let message = if suggestions.is_empty() {
+                Cow::Borrowed(msg)
+            } else {
+                let mut message = String::new();
+                ensure_lf(&mut message, msg);
+                message.push('\n');
+
+                for (kind, note, _span) in suggestions {
+                    message.push_str("  = ");
+                    message.push_str(kind.name());
+                    message.push_str(": ");
+                    ensure_lf(&mut message, note);
+                }
+                message.push('\n');
+
+                Cow::Owned(message)
+            };
+
+            let msg = syn::LitStr::new(&*message, *end);
+            let group = quote_spanned!(*end=> { #msg } );
+            quote_spanned!(*start=> compile_error!#group)
         }
 
-        let message = if suggestions.is_empty() {
-            Cow::Borrowed(msg)
-        } else {
-            let mut message = String::new();
-            ensure_lf(&mut message, msg);
-            message.push('\n');
-
-            for (kind, note, _span) in suggestions {
-                message.push_str("  = ");
-                message.push_str(kind.name());
-                message.push_str(": ");
-                ensure_lf(&mut message, note);
-            }
-            message.push('\n');
-
-            Cow::Owned(message)
-        };
-
-        let msg = syn::LitStr::new(&*message, self.end);
-        let group = quote_spanned!(self.end=> { #msg } );
-        let comp_err = quote_spanned!(self.start=> compile_error!#group);
-        ts.extend(comp_err);
+        ts.extend(diag_to_tokens(
+            &self.start,
+            &self.end,
+            &self.level,
+            &self.msg,
+            &self.suggestions,
+        ));
+        ts.extend(
+            self.children.iter().map(|(start, end, msg)| {
+                diag_to_tokens(&start, &end, &Level::Error, &msg, &vec![])
+            }),
+        );
     }
 }
 
@@ -192,23 +219,39 @@ impl From<syn::Error> for Diagnostic {
     fn from(err: syn::Error) -> Self {
         use proc_macro2::TokenTree;
 
-        let mut ts = err.to_compile_error().into_iter();
-        let start = ts.next().unwrap().span(); // compile_error
-        ts.next().unwrap(); // !
+        fn gut_error(ts: &mut impl Iterator<Item = TokenTree>) -> Option<(Span, Span, String)> {
+            let start = match ts.next() {
+                // compile_error
+                None => return None,
+                Some(tt) => tt.span(),
+            };
+            ts.next().unwrap(); // !
 
-        let lit = match ts.next().unwrap() {
-            TokenTree::Group(group) => match group.stream().into_iter().next().unwrap() {
-                TokenTree::Literal(lit) => lit,
+            let lit = match ts.next().unwrap() {
+                TokenTree::Group(group) => match group.stream().into_iter().next().unwrap() {
+                    TokenTree::Literal(lit) => lit,
+                    _ => unreachable!(),
+                },
                 _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        };
+            };
 
-        let end = lit.span();
-        let mut msg = lit.to_string();
-        msg.pop();
-        msg.remove(0);
+            let end = lit.span();
+            let mut msg = lit.to_string();
+            msg.pop();
+            msg.remove(0);
 
-        Diagnostic::double_spanned(start, end, Level::Error, msg)
+            Some((start, end, msg))
+        }
+
+        let mut ts = err.to_compile_error().into_iter();
+
+        let (start, end, msg) = gut_error(&mut ts).unwrap();
+        let mut res = Diagnostic::double_spanned(start, end, Level::Error, msg);
+
+        while let Some((start, end, msg)) = gut_error(&mut ts) {
+            res = res.double_span_error(start, end, msg);
+        }
+
+        res
     }
 }
