@@ -1,3 +1,8 @@
+# v0.4.6 (2020-2-31)
+
+* Now any type that implements `quote::ToTokens` can be used instead of spans.
+  This allows for high quality error messages.
+
 # v0.4.6 (2020-1-31)
 
 * `From<syn::Error>` implementation doesn't lose span info anymore, see

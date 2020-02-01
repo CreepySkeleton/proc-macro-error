@@ -1,6 +1,6 @@
 [package]
 name = "proc-macro-error"
-version = "0.4.6"
+version = "0.4.7"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 description = "Almost drop-in replacement to panics in proc-macros"
 
@@ -20,7 +20,7 @@ maintenance = { status = "actively-developed" }
 quote = "1"
 proc-macro2 = "1"
 syn = { version = "1", default-features = false }
-proc-macro-error-attr = { path = "./proc-macro-error-attr", version = "=0.4.6"}
+proc-macro-error-attr = { path = "./proc-macro-error-attr", version = "=0.4.7"}
 
 [build-dependencies]
 rustversion = "1.0"
