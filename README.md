@@ -53,7 +53,11 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
     if let Err(err) = some_logic(&input) {
         // we've got a span to blame, let's use it
         // This immediately aborts the proc-macro and shows the error
-        abort!(err.span, "You made an error, go fix it: {}", err.msg);
+        //
+        // You can use `proc_macro::Span`, `proc_macro2::Span`, and
+        // anything that implements `quote::ToTokens` (almost every type from
+        // `syn` and `proc_macro2`)
+        abort!(err, "You made an error, go fix it: {}", err.msg);
     }
 
     // `Result` has some handy shortcuts if your error type implements
@@ -86,7 +90,7 @@ fn process_attrs(attrs: &[Attribute]) -> Vec<Attribute> {
         .filter_map(|attr| match process_attr(attr) {
             Ok(res) => Some(res),
             Err(msg) => {
-                emit_error!(attr.span(), "Invalid attribute: {}", msg);
+                emit_error!(attr, "Invalid attribute: {}", msg);
                 None
             }
         })

@@ -71,12 +71,23 @@
 //! 2.  ```ignore
 //!     abort!(span, message)
 //!     ```
-//!     Shortcut for `Diagnostic::spanned(span, message.to_string()).abort()`
+//!     The first argument is an expression the span info should be taken from. It can be
+//!     either
+//!
+//!     * [`proc_macro::Span`]
+//!     * [`proc_macro2::Span`]
+//!     * Anything that implements [`quote::ToTokens`], in other words, almost every type
+//!     * in `syn` and `proc_macro2`. **This form gives the best looking error messages and
+//!       should be used whenever possible!**
+//!
+//!     The second argument is the error message, it must implement [`ToString`].
 //!
 //! 3.  ```ignore
 //!     abort!(span, format_literal, format_args...)
 //!     ```
-//!     Shortcut for `Diagnostic::spanned(span, format!(format_literal, format_args...)).abort()`
+//!
+//!     This form is pretty much the same as 2, except `format!(format_literal, format_args...)`
+//!     will be used to for the message instead of [`ToString`].
 //!
 //! That's it. `abort!`, `emit_warning`, `emit_error` share this exact syntax.
 //!
@@ -84,7 +95,21 @@
 //! and do not take span in 2 and 3 forms. Those are essentially shortcuts for
 //! `macro!(Span::call_site(), args...)`.
 //!
-//! `diagnostic!` require `Level` instance between `span` and second argument (1 form is the same).
+//! `diagnostic!` requires `Level` instance between `span` and second argument (1 form is the same).
+//!
+//! > **Important!**
+//! >
+//! > If you have some type from `proc_macro` or `syn` to point to, do not call `.span()`
+//! > on it but rather use it directly:
+//! > ```no_run
+//! > # use proc_macro_error::abort;
+//! > # let input = proc_macro2::TokenStream::new();
+//! > let ty: syn::Type = syn::parse2(input).unwrap();
+//! > abort!(ty, "BOOM");
+//! > //     ^^ <-- avoid .span()
+//! > ```
+//! >
+//! > `.span()` calls work too, but you may experience regressions in message quality.
 //!
 //! #### Note attachments
 //!
@@ -350,5 +375,51 @@ fn check_correctness() {
             "proc-macro-error API cannot be used outside of `entry_point` invocation, \
              perhaps you forgot to annotate your #[proc_macro] function with `#[proc_macro_error]"
         );
+    }
+}
+
+/// **ALL THE STUFF INSIDE IS NOT PUBLIC API!!!**
+#[doc(hidden)]
+pub mod __export {
+    use proc_macro2::Span;
+    use quote::ToTokens;
+
+    // inspired by
+    // https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md#simple-application
+
+    pub trait DoubleSpanToTokens {
+        fn double_span(&self) -> (Span, Span);
+    }
+
+    pub trait DoubleSpanSingleSpan2 {
+        fn double_span(&self) -> (Span, Span);
+    }
+
+    pub trait DoubleSpanSingleSpan {
+        fn double_span(&self) -> (Span, Span);
+    }
+
+    impl<T: ToTokens> DoubleSpanToTokens for &T {
+        fn double_span(&self) -> (Span, Span) {
+            let mut ts = self.to_token_stream().into_iter();
+            let start = ts
+                .next()
+                .map(|tt| tt.span())
+                .unwrap_or_else(Span::call_site);
+            let end = ts.last().map(|tt| tt.span()).unwrap_or(start);
+            (start, end)
+        }
+    }
+
+    impl DoubleSpanSingleSpan2 for Span {
+        fn double_span(&self) -> (Span, Span) {
+            (*self, *self)
+        }
+    }
+
+    impl DoubleSpanSingleSpan for proc_macro::Span {
+        fn double_span(&self) -> (Span, Span) {
+            (self.clone().into(), self.clone().into())
+        }
     }
 }

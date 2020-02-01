@@ -4,6 +4,7 @@ extern crate proc_macro;
 
 use proc_macro2::{Span, TokenStream};
 use proc_macro_error::{set_dummy, Diagnostic, Level, OptionExt, ResultExt};
+use syn::{parse_macro_input, spanned::Spanned};
 
 // Macros and Diagnostic
 
@@ -196,4 +197,13 @@ pub fn multiple_tokens(
 ) -> proc_macro::TokenStream {
     let input = proc_macro2::TokenStream::from(input);
     Err(syn::Error::new_spanned(input, "...")).unwrap_or_abort()
+}
+
+#[proc_macro]
+#[proc_macro_error]
+pub fn to_tokens_span(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let ty = parse_macro_input!(input as syn::Type);
+    emit_error!(ty, "whole type");
+    emit_error!(ty.span(), "explicit .span()");
+    quote!().into()
 }

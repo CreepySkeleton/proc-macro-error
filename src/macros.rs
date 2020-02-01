@@ -14,8 +14,13 @@ macro_rules! diagnostic {
 
     // span, message, help
     ($span:expr, $level:expr, $fmt:expr, $($args:expr),+ ; $($rest:tt)+) => {{
-        let diag = $crate::Diagnostic::spanned(
-            $span.into(),
+        #[allow(unused_imports)]
+        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
+        let (start, end) = (&$span).double_span();
+
+        let diag = $crate::Diagnostic::double_spanned(
+            start,
+            end,
             $level,
             format!($fmt, $($args),*)
         );
@@ -24,22 +29,35 @@ macro_rules! diagnostic {
     }};
 
     ($span:expr, $level:expr, $msg:expr ; $($rest:tt)+) => {{
-        let diag = $crate::Diagnostic::spanned($span.into(), $level, $msg.to_string());
+        #[allow(unused_imports)]
+        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
+        let (start, end) = (&$span).double_span();
+
+        let diag = $crate::Diagnostic::double_spanned(start, end, $level, $msg.to_string());
         $crate::__pme__suggestions!(diag $($rest)*);
         diag
     }};
 
     // span, message, no help
     ($span:expr, $level:expr, $fmt:expr, $($args:expr),+) => {{
-        $crate::Diagnostic::spanned(
-            $span.into(),
+        #[allow(unused_imports)]
+        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
+        let (start, end) = (&$span).double_span();
+
+        $crate::Diagnostic::double_spanned(
+            start,
+            end,
             $level,
             format!($fmt, $($args),*)
         )
     }};
 
     ($span:expr, $level:expr, $msg:expr) => {{
-        $crate::Diagnostic::spanned($span.into(), $level, $msg.to_string())
+        #[allow(unused_imports)]
+        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
+        let (start, end) = (&$span).double_span();
+
+        $crate::Diagnostic::double_spanned(start, end, $level, $msg.to_string())
     }};
 
 
