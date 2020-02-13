@@ -3,7 +3,10 @@ extern crate proc_macro_error;
 extern crate proc_macro;
 
 use proc_macro2::{Span, TokenStream};
-use proc_macro_error::{set_dummy, Diagnostic, Level, OptionExt, ResultExt};
+use proc_macro_error::{
+    abort, diagnostic, emit_error, proc_macro_error, set_dummy, Diagnostic, Level, OptionExt,
+    ResultExt,
+};
 use syn::{parse_macro_input, spanned::Spanned};
 
 // Macros and Diagnostic
@@ -168,6 +171,23 @@ pub fn dummy(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     });
 
     abort!(span, "set_dummy test")
+}
+
+#[proc_macro]
+#[proc_macro_error]
+pub fn append_dummy(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let span = input.into_iter().next().unwrap().span();
+    set_dummy(quote! {
+        impl Default for NeedDefault
+    });
+
+    proc_macro_error::append_dummy(quote!({
+        fn default() -> Self {
+            NeedDefault::A
+        }
+    }));
+
+    abort!(span, "append_dummy test")
 }
 
 // Panic

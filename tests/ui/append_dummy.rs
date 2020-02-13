@@ -6,7 +6,7 @@ enum NeedDefault {
     B
 }
 
-dummy!(need_default);
+append_dummy!(need_default);
 
 fn main() {
     let _ = NeedDefault::default();

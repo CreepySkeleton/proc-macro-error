@@ -230,7 +230,7 @@ pub extern crate proc_macro2;
 
 pub use crate::{
     diagnostic::{Diagnostic, Level},
-    dummy::set_dummy,
+    dummy::{append_dummy, set_dummy},
 };
 pub use proc_macro_error_attr::proc_macro_error;
 

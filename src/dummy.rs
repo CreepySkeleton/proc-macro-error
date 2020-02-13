@@ -114,12 +114,12 @@
 //! ```
 
 use proc_macro2::TokenStream;
-use std::cell::Cell;
+use std::cell::RefCell;
 
 use crate::check_correctness;
 
 thread_local! {
-    static DUMMY_IMPL: Cell<Option<TokenStream>> = Cell::new(None);
+    static DUMMY_IMPL: RefCell<Option<TokenStream>> = RefCell::new(None);
 }
 
 /// Sets dummy token stream which will be appended to `compile_error!(msg);...`
@@ -129,6 +129,20 @@ thread_local! {
 pub fn set_dummy(dummy: TokenStream) -> Option<TokenStream> {
     check_correctness();
     DUMMY_IMPL.with(|old_dummy| old_dummy.replace(Some(dummy)))
+}
+
+/// Same as [`set_dummy`] but, instead of resetting, appends tokens to the
+/// existing dummy (if any). Behaves as `set_dummy` if no dummy is present.
+pub fn append_dummy(dummy: TokenStream) {
+    check_correctness();
+    DUMMY_IMPL.with(|old_dummy| {
+        let mut cell = old_dummy.borrow_mut();
+        if let Some(ts) = cell.as_mut() {
+            ts.extend(dummy);
+        } else {
+            *cell = Some(dummy);
+        }
+    });
 }
 
 pub(crate) fn cleanup() -> Option<TokenStream> {
