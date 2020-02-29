@@ -1,7 +1,6 @@
-extern crate rustversion;
 extern crate trybuild;
 
-#[rustversion::attr(any(before(1.39), not(stable)), ignore)]
+#[cfg_attr(skip_ui_tests, ignore)]
 #[test]
 fn ui() {
     let t = trybuild::TestCases::new();

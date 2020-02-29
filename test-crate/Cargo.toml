@@ -13,5 +13,4 @@ proc-macro = true
 proc-macro-error = { path = "../" }
 quote = "1"
 proc-macro2 = "1"
-syn = {version = "1", default-features = false }
-
+syn = { version = "1", default-features = false, features = ["derive", "parsing", "proc-macro", "printing"] }
