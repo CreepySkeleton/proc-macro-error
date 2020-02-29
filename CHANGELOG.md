@@ -1,3 +1,8 @@
+# v0.4.10 (2020-2-29)
+
+* `proc-macro-error` doesn't depend on syn\[full\] anymore, the compilation
+  is \~30secs faster.
+
 # v0.4.9 (2020-2-13)
 
 * New function: `append_dummy`.
