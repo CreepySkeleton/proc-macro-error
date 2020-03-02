@@ -1,11 +1,11 @@
 fn main() {
-    let (version, channel, _) = version_check::triple().unwrap();
-
-    if !channel.is_nightly() {
+    if !version_check::is_feature_flaggable().unwrap_or(false) {
         println!("cargo:rustc-cfg=use_fallback");
     }
 
-    if version.at_most("1.38.0") || !channel.is_stable() {
+    if version_check::is_max_version("1.38.0").unwrap_or(false)
+        || !version_check::Channel::read().unwrap().is_stable()
+    {
         println!("cargo:rustc-cfg=skip_ui_tests");
     }
 }
