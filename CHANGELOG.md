@@ -1,3 +1,8 @@
+# v0.4.11 (2020-3-02)
+
+* `build.rs` no longer fails when `rustc` date could not be determined,
+  [thanks to `Fabian Möller`](https://gitlab.com/CreepySkeleton/proc-macro-error/-/merge_requests/25).
+
 # v0.4.10 (2020-2-29)
 
 * `proc-macro-error` doesn't depend on syn\[full\] anymore, the compilation
