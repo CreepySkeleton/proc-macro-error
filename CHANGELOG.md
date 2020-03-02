@@ -1,7 +1,7 @@
 # v0.4.11 (2020-3-02)
 
 * `build.rs` no longer fails when `rustc` date could not be determined,
-  (thanks to [`Fabian Möller`](https://gitlab.com/CreepySkeleton/proc-macro-error/-/merge_requests/25)
+  (thanks to [`Fabian Möller`](https://gitlab.com/CreepySkeleton/proc-macro-error/issues/8)
   for noticing and to [`Igor Gnatenko`](https://gitlab.com/CreepySkeleton/proc-macro-error/-/merge_requests/25)
   for fixing).
 
