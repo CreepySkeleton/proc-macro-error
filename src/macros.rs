@@ -16,7 +16,7 @@ macro_rules! diagnostic {
     ($span:expr, $level:expr, $fmt:expr, $($args:expr),+ ; $($rest:tt)+) => {{
         #[allow(unused_imports)]
         use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).double_span();
+        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
 
         let diag = $crate::Diagnostic::double_spanned(
             start,
@@ -31,7 +31,7 @@ macro_rules! diagnostic {
     ($span:expr, $level:expr, $msg:expr ; $($rest:tt)+) => {{
         #[allow(unused_imports)]
         use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).double_span();
+        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
 
         let diag = $crate::Diagnostic::double_spanned(start, end, $level, $msg.to_string());
         $crate::__pme__suggestions!(diag $($rest)*);
@@ -42,7 +42,7 @@ macro_rules! diagnostic {
     ($span:expr, $level:expr, $fmt:expr, $($args:expr),+) => {{
         #[allow(unused_imports)]
         use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).double_span();
+        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
 
         $crate::Diagnostic::double_spanned(
             start,
@@ -55,7 +55,7 @@ macro_rules! diagnostic {
     ($span:expr, $level:expr, $msg:expr) => {{
         #[allow(unused_imports)]
         use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).double_span();
+        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
 
         $crate::Diagnostic::double_spanned(start, end, $level, $msg.to_string())
     }};

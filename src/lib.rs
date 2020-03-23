@@ -389,19 +389,22 @@ pub mod __export {
     // https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md#simple-application
 
     pub trait DoubleSpanToTokens {
-        fn double_span(&self) -> (Span, Span);
+        #[allow(non_snake_case)]
+        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span);
     }
 
     pub trait DoubleSpanSingleSpan2 {
-        fn double_span(&self) -> (Span, Span);
+        #[allow(non_snake_case)]
+        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span);
     }
 
     pub trait DoubleSpanSingleSpan {
-        fn double_span(&self) -> (Span, Span);
+        #[allow(non_snake_case)]
+        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span);
     }
 
     impl<T: ToTokens> DoubleSpanToTokens for &T {
-        fn double_span(&self) -> (Span, Span) {
+        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span) {
             let mut ts = self.to_token_stream().into_iter();
             let start = ts
                 .next()
@@ -413,13 +416,13 @@ pub mod __export {
     }
 
     impl DoubleSpanSingleSpan2 for Span {
-        fn double_span(&self) -> (Span, Span) {
+        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span) {
             (*self, *self)
         }
     }
 
     impl DoubleSpanSingleSpan for proc_macro::Span {
-        fn double_span(&self) -> (Span, Span) {
+        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span) {
             (self.clone().into(), self.clone().into())
         }
     }
