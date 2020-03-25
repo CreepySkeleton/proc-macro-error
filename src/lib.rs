@@ -327,11 +327,11 @@ pub fn entry_point<F>(f: F, proc_macro_hack: bool) -> proc_macro::TokenStream
 where
     F: FnOnce() -> proc_macro::TokenStream + UnwindSafe,
 {
-    ENTERED_ENTRY_POINT.with(|flag| flag.set(true));
+    ENTERED_ENTRY_POINT.with(|flag| flag.set(flag.get() + 1));
     let caught = catch_unwind(f);
     let dummy = dummy::cleanup();
     let err_storage = imp::cleanup();
-    ENTERED_ENTRY_POINT.with(|flag| flag.set(false));
+    ENTERED_ENTRY_POINT.with(|flag| flag.set(flag.get() - 1));
 
     let mut appendix = TokenStream::new();
     if proc_macro_hack {
@@ -365,13 +365,13 @@ fn abort_now() -> ! {
 }
 
 thread_local! {
-    static ENTERED_ENTRY_POINT: Cell<bool> = Cell::new(false);
+    static ENTERED_ENTRY_POINT: Cell<usize> = Cell::new(0);
 }
 
 struct AbortNow;
 
 fn check_correctness() {
-    if !ENTERED_ENTRY_POINT.with(|flag| flag.get()) {
+    if ENTERED_ENTRY_POINT.with(|flag| flag.get()) == 0 {
         panic!(
             "proc-macro-error API cannot be used outside of `entry_point` invocation, \
              perhaps you forgot to annotate your #[proc_macro] function with `#[proc_macro_error]"
