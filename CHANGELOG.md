@@ -1,3 +1,17 @@
+# v1.0.0 (2020-3-25)
+
+I believe the API can be considered stable because it's been a few months without
+breaking changes, and I also don't think this crate will receive much further evolution.
+It's perfect, admit it.
+
+Hence, meet the new, stable release!
+
+### Improvements
+
+* Supported nested `#[proc_macro_error]` attributes. Well, you aren't supposed to do that,
+  but I caught myself doing it by accident on one occasion and the behavior was... surprising.
+  Better to handle this smooth.
+
 # v0.4.12 (2020-3-23)
 
 * Error message on macros' misuse is now a bit more understandable.
