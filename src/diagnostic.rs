@@ -217,7 +217,7 @@ impl SuggestionKind {
 
 impl From<syn::Error> for Diagnostic {
     fn from(err: syn::Error) -> Self {
-        use proc_macro2::TokenTree;
+        use proc_macro2::{Delimiter, TokenTree};
 
         fn gut_error(ts: &mut impl Iterator<Item = TokenTree>) -> Option<(Span, Span, String)> {
             let start = match ts.next() {
@@ -228,15 +228,34 @@ impl From<syn::Error> for Diagnostic {
             ts.next().unwrap(); // !
 
             let lit = match ts.next().unwrap() {
-                TokenTree::Group(group) => match group.stream().into_iter().next().unwrap() {
-                    TokenTree::Literal(lit) => lit,
-                    _ => unreachable!(),
-                },
+                TokenTree::Group(group) => {
+                    // Currently `syn` builds `compile_error!` invocations
+                    // exclusively in `ident{"..."}` (braced) form which is not
+                    // followed by `;` (semicolon).
+                    //
+                    // But if it changes to `ident("...");` (parenthesized)
+                    // or `ident["..."];` (bracketed) form,
+                    // we will need to skip the `;` as well.
+                    // Highly unlikely, but better safe than sorry.
+
+                    if group.delimiter() == Delimiter::Parenthesis
+                        || group.delimiter() == Delimiter::Bracket
+                    {
+                        ts.next().unwrap(); // ;
+                    }
+
+                    match group.stream().into_iter().next().unwrap() {
+                        TokenTree::Literal(lit) => lit,
+                        _ => unreachable!(),
+                    }
+                }
                 _ => unreachable!(),
             };
 
             let end = lit.span();
             let mut msg = lit.to_string();
+
+            // "abc" => abc
             msg.pop();
             msg.remove(0);
 
