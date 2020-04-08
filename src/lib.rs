@@ -5,6 +5,12 @@
 //!
 //! Also, there's ability to [append a dummy token stream](dummy/index.html) to your errors.
 //!
+//! ## Real world examples
+//!
+//! * [`structopt-derive`](https://github.com/TeXitoi/structopt/tree/master/structopt-derive)
+//!   (abort-like usage)
+//! * [`auto-impl`](https://github.com/auto-impl-rs/auto_impl/) (emit-like usage)
+//!
 //! ## Limitations
 //!
 //! - Warnings are emitted only on nightly, they are ignored on stable.
@@ -15,19 +21,103 @@
 //! - Temporary incompatible with `proc_macro_hack`, unfortunately. No worries, some highly
 //!   trained people are working on it!
 //!
-//! ## Guide
+//! ### `#[proc_macro_error]` attribute
 //!
-//! ### Macros
+//! **This attribute MUST be present on the top level of your macro** (the function
+//! annotated with any of `#[proc_macro]`, `#[proc_macro_derive]`, `#[proc_macro_attribute]`).
 //!
-//! First of all - **all the emitting-related API must be used within a function
-//! annotated with [`#[proc_macro_error]`](#proc_macro_error-attribute) attribute**. You'll just get a
-//! panic otherwise, no errors will be shown.
+//! This attribute performs the setup and cleanup necessary to make things work.
 //!
-//! Most of the time you want to use the macros.
+//! In most cases you'll need the simple `#[proc_macro_error]` form without any
+//! additional settings. Feel free to [skip the "Syntax" section](#macros).
+//!
+//! #### Syntax
+//!
+//! `#[proc_macro_error]` or `#[proc_macro_error(settings...)]`, where `settings...`
+//! is a comma-separated list of:
+//!
+//! - `proc_macro_hack`:
+//!
+//!     In order to correctly cooperate with `#[proc_macro_hack]`, `#[proc_macro_error]`
+//!     attribute must be placed *before* (above) it, like this:
+//!
+//!     ```no_run
+//!     # use proc_macro2::TokenStream;
+//!     # const IGNORE: &str = "
+//!     #[proc_macro_error]
+//!     #[proc_macro_hack]
+//!     #[proc_macro]
+//!     # ";
+//!     fn my_macro(input: TokenStream) -> TokenStream {
+//!         unimplemented!()
+//!     }
+//!     ```
+//!
+//!     If, for some reason, you can't place it like that you can use
+//!     `#[proc_macro_error(proc_macro_hack)]` instead.
+//!
+//!     # Note
+//!
+//!     If `proc-macro-hack` was detected (by any means) `allow_not_macro`
+//!     and `assert_unwind_safe` will be applied automatically.
+//!
+//! - `allow_not_macro`:
+//!
+//!     By default, the attribute checks that it's applied to a proc-macro.
+//!     If none of `#[proc_macro]`, `#[proc_macro_derive]` nor `#[proc_macro_attribute]` are
+//!     present it will panic. It's the intention - this crate is supposed to be used only with
+//!     proc-macros.
+//!
+//!     This setting is made to bypass the check, useful in certain circumstances.
+//!
+//!     Pay attention: the function this attribute is applied to must return
+//!     `proc_macro::TokenStream`.
+//!
+//!     This setting is implied if `proc-macro-hack` was detected.
+//!
+//! - `assert_unwind_safe`:
+//!
+//!     By default, your code must be [unwind safe]. If your code is not unwind safe,
+//!     but you believe it's correct, you can use this setting to bypass the check.
+//!     You would need this for code that uses `lazy_static` or `thread_local` with
+//!     `Cell/RefCell` inside (and the like).
+//!
+//!     This setting is implied if `#[proc_macro_error]` is applied to a function
+//!     marked as `#[proc_macro]`, `#[proc_macro_derive]` or `#[proc_macro_attribute]`.
+//!
+//!     This setting is also implied if `proc-macro-hack` was detected.
+//!
+//! ## Macros
+//!
+//! Most of the time you want to use the macros. Syntax is described in the next section below.
+//!
+//! You'll need to decide how you want to emit errors:
+//!
+//! * Emit the error and abort. Very much panic-like usage. Served by [`abort!`] and
+//!   [`abort_call_site!`].
+//! * Emit the error but do not abort right away, looking for other errors to report.
+//!   Served by [`emit_error!`] and [`emit_call_site_error!`].
+//!
+//! You **can** mix these usages.
+//!
+//! `abort` and `emit_error` take a "source span" as the first argument. This source
+//! will be used to highlight the place the error originates from. It must be one of:
+//!
+//! * *Something* that implements [`ToTokens`] (most types in `syn` and `proc-macro2` do).
+//!   This source is the preferable one since it doesn't lose span information on multi-token
+//!   spans, see [this issue](https://gitlab.com/CreepySkeleton/proc-macro-error/-/issues/6)
+//!   for details.
+//! * [`proc_macro::Span`]
+//! * [`proc-macro2::Span`]
+//!
+//! The rest is your message in format-like style.
+//!
+//! See [the next section](#syntax-1) for detailed syntax.
 //!
 //! - [`abort!`]:
 //!
-//!     Very much panic-like usage - abort execution and show the error. Expands to [`!`] (never type).
+//!     Very much panic-like usage - abort right away and show the error.
+//!     Expands to [`!`] (never type).
 //!
 //! - [`abort_call_site!`]:
 //!
@@ -35,7 +125,8 @@
 //!
 //! - [`emit_error!`]:
 //!
-//!     [`proc_macro::Diagnostic`]-like usage - emit the error but do not abort the macro.
+//!     [`proc_macro::Diagnostic`]-like usage - emit the error but keep going,
+//!     looking for other errors to report.
 //!     The compilation will fail nonetheless. Expands to [`()`] (unit type).
 //!
 //! - [`emit_call_site_error!`]:
@@ -56,29 +147,21 @@
 //!
 //! - [`diagnostic`]:
 //!
-//!     Build instance of `Diagnostic` in format-like style.
+//!     Build an instance of `Diagnostic` in format-like style.
 //!
-//! ### Syntax
+//! #### Syntax
 //!
 //! All the macros have pretty much the same syntax:
 //!
 //! 1.  ```ignore
 //!     abort!(single_expr)
 //!     ```
-//!     Shortcut for `Diagnostic::from(expr).abort()`. **There's no way to attach notes
-//!     in this form!**
+//!     Shortcut for `Diagnostic::from(expr).abort()`.
 //!
 //! 2.  ```ignore
 //!     abort!(span, message)
 //!     ```
-//!     The first argument is an expression the span info should be taken from. It can be
-//!     either
-//!
-//!     * [`proc_macro::Span`]
-//!     * [`proc_macro2::Span`]
-//!     * Anything that implements [`quote::ToTokens`], in other words, almost every type
-//!     * in `syn` and `proc_macro2`. **This form gives the best looking error messages and
-//!       should be used whenever possible!**
+//!     The first argument is an expression the span info should be taken from.
 //!
 //!     The second argument is the error message, it must implement [`ToString`].
 //!
@@ -92,10 +175,11 @@
 //! That's it. `abort!`, `emit_warning`, `emit_error` share this exact syntax.
 //!
 //! `abort_call_site!`, `emit_call_site_warning`, `emit_call_site_error` lack 1 form
-//! and do not take span in 2 and 3 forms. Those are essentially shortcuts for
+//! and do not take span in 2'th and 3'th forms. Those are essentially shortcuts for
 //! `macro!(Span::call_site(), args...)`.
 //!
-//! `diagnostic!` requires `Level` instance between `span` and second argument (1 form is the same).
+//! `diagnostic!` requires a [`Level`] instance between `span` and second argument
+//! (1'th form is the same).
 //!
 //! > **Important!**
 //! >
@@ -139,65 +223,7 @@
 //!   );
 //!   ```
 //!
-//! ### `#[proc_macro_error]` attribute
-//!
-//! **This attribute MUST be present on the top level of your macro.**
-//!
-//! This attribute performs the setup and cleanup necessary to make things work.
-//!
-//! #### Syntax
-//!
-//! `#[proc_macro_error]` or `#[proc_macro_error(settings...)]`, where `settings...`
-//! is a comma-separated list of:
-//!
-//! - `proc_macro_hack`:
-//!
-//!     To correctly cooperate with `#[proc_macro_hack]` `#[proc_macro_error]`
-//!     attribute must be placed *before* (above) it, like this:
-//!
-//!     ```ignore
-//!     #[proc_macro_error]
-//!     #[proc_macro_hack]
-//!     #[proc_macro]
-//!     fn my_macro(input: TokenStream) -> TokenStream {
-//!         unimplemented!()
-//!     }
-//!     ```
-//!
-//!     If, for some reason, you can't place it like that you can use
-//!     `#[proc_macro_error(proc_macro_hack)]` instead.
-//!
-//!     # Note
-//!
-//!     If `proc-macro-hack` was detected (by any means) `allow_not_macro`
-//!     and `assert_unwind_safe` will be applied automatically.
-//!
-//! - `allow_not_macro`:
-//!
-//!     By default, the attribute checks that it's applied to a proc-macro.
-//!     If none of `#[proc_macro]`, `#[proc_macro_derive]` nor `#[proc_macro_attribute]` are
-//!     present it will panic. It's the intention - this crate is supposed to be used only with
-//!     proc-macros.
-//!
-//!     This setting is made to bypass the check, useful in certain circumstances.
-//!
-//!     Please note: the function this attribute is applied to must return
-//!     `proc_macro::TokenStream`.
-//!
-//!     This setting is implied if `proc-macro-hack` was detected.
-//!
-//! - `assert_unwind_safe`:
-//!
-//!     By default, your code must be [unwind safe]. If your code is not unwind safe,
-//!     but you believe it's correct, you can use this setting to bypass the check.
-//!     You would need this for code that uses `lazy_static` or `thread_local` with
-//!     `Cell/RefCell` inside (and the like).
-//!
-//!     This setting is implied if `#[proc_macro_error]` is applied to a function
-//!     marked as `#[proc_macro]`, `#[proc_macro_derive]` or `#[proc_macro_attribute]`.
-//!
-//!     This setting is also implied if `proc-macro-hack` was detected.
-//!
+
 //! ### Diagnostic type
 //!
 //! [`Diagnostic`] type is intentionally designed to be API compatible with [`proc_macro::Diagnostic`].
@@ -205,18 +231,25 @@
 //!
 //!
 //! [`abort!`]: macro.abort.html
+//! [`abort_call_site!`]: macro.abort_call_site.html
 //! [`emit_warning!`]: macro.emit_warning.html
 //! [`emit_error!`]: macro.emit_error.html
-//! [`abort_call_site!`]: macro.abort_call_site.html
 //! [`emit_call_site_warning!`]: macro.emit_call_site_error.html
 //! [`emit_call_site_error!`]: macro.emit_call_site_warning.html
 //! [`diagnostic!`]: macro.diagnostic.html
-//! [proc_macro_error]: ./../proc_macro_error_attr/attr.proc_macro_error.html
 //! [`Diagnostic`]: struct.Diagnostic.html
+//!
+//! [`proc_macro::Span`]: https://doc.rust-lang.org/proc_macro/struct.Span.html
 //! [`proc_macro::Diagnostic`]: https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html
+//!
 //! [unwind safe]: https://doc.rust-lang.org/std/panic/trait.UnwindSafe.html#what-is-unwind-safety
 //! [`!`]: https://doc.rust-lang.org/std/primitive.never.html
 //! [`()`]: https://doc.rust-lang.org/std/primitive.unit.html
+//! [`ToString`]: https://doc.rust-lang.org/std/string/trait.ToString.html
+//!
+//! [`proc-macro2::Span`]: https://docs.rs/proc-macro2/1.0.10/proc_macro2/struct.Span.html
+//! [`ToTokens`]: https://docs.rs/quote/1.0.3/quote/trait.ToTokens.html
+//!
 
 #![cfg_attr(not(use_fallback), feature(proc_macro_diagnostic))]
 #![forbid(unsafe_code)]
