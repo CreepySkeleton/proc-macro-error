@@ -1,3 +1,7 @@
+# v1.0.0 (2020-4-8)
+
+* `proc-macro-hack` is now well tested and supported.
+
 # v1.0.0 (2020-3-25)
 
 I believe the API can be considered stable because it's been a few months without

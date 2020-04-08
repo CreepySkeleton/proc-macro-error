@@ -27,6 +27,7 @@ proc-macro-error-attr = { path = "./proc-macro-error-attr", version = "=1.0.0"}
 
 [dev-dependencies]
 test-crate = { path = "./test-crate" }
+proc-macro-hack-test = { path = "./test-crate/proc-macro-hack-test" }
 trybuild = { version = "1.0.19", features = ["diff"] }
 toml = "=0.5.2" # DO NOT BUMP
 

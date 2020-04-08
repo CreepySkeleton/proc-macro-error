@@ -127,10 +127,8 @@ pub fn make_answer(input: TokenStream) -> TokenStream {
 - Warnings are emitted only on nightly, they are ignored on stable.
 - "help" suggestions can't have their own span info on stable,
   (essentially inheriting the parent span).
-- If a panic occurs somewhere in your macro no errors will be displayed. This is not a
+- If your macro happens to trigger a panic, no errors will be displayed. This is not a
   technical limitation but rather intentional design. `panic` is not for error reporting.
-- Temporary incompatible with `proc_macro_hack`, unfortunately. No worries, some highly
-  trained people are working on it!
 
 ## MSRV policy
 

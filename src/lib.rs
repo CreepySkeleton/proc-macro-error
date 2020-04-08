@@ -234,7 +234,6 @@ pub use crate::{
 };
 pub use proc_macro_error_attr::proc_macro_error;
 
-use proc_macro2::TokenStream;
 use quote::quote;
 
 use std::cell::Cell;
@@ -333,27 +332,34 @@ where
     let err_storage = imp::cleanup();
     ENTERED_ENTRY_POINT.with(|flag| flag.set(flag.get() - 1));
 
-    let mut appendix = TokenStream::new();
-    if proc_macro_hack {
-        appendix.extend(quote! {
-            #[allow(unused)]
-            macro_rules! proc_macro_call {
-                () => ( unimplemented!() )
-            }
-        });
-    }
+    let gen_error = || {
+        if proc_macro_hack {
+            quote! {{
+                macro_rules! proc_macro_call {
+                    () => ( unimplemented!() )
+                }
+
+                #(#err_storage)*
+                #dummy
+
+                unimplemented!()
+            }}
+        } else {
+            quote!( #(#err_storage)* #dummy )
+        }
+    };
 
     match caught {
         Ok(ts) => {
             if err_storage.is_empty() {
                 ts
             } else {
-                quote!( #(#err_storage)* #dummy #appendix ).into()
+                gen_error().into()
             }
         }
 
         Err(boxed) => match boxed.downcast::<AbortNow>() {
-            Ok(_) => quote!( #(#err_storage)* #dummy #appendix ).into(),
+            Ok(_) => gen_error().into(),
             Err(boxed) => resume_unwind(boxed),
         },
     }

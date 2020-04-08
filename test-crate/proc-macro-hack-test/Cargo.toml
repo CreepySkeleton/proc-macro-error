@@ -1,0 +1,18 @@
+[package]
+name = "proc-macro-hack-test"
+version = "0.0.5"
+authors = ["David Tolnay <dtolnay@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "Demo of proc-macro-hack"
+repository = "https://github.com/dtolnay/proc-macro-hack"
+edition = "2018"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+proc-macro-hack = "0.5"
+demo-hack-impl = { path = "demo-hack-impl" }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
