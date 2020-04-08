@@ -1,6 +1,9 @@
 # v1.0.0 (2020-4-8)
 
-* `proc-macro-hack` is now well tested and supported.
+* `proc-macro-hack` is now well tested and supported. Not sure about `proc-macro-nested`,
+  please fill a request if you need it.
+* Fixed `emit_call_site_error`.
+* Documentation improvements.
 
 # v1.0.0 (2020-3-25)
 

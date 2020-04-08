@@ -1,4 +1,4 @@
-use crate::abort_now;
+use crate::{abort_now, check_correctness};
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 
@@ -100,6 +100,7 @@ impl Diagnostic {
     ///
     /// Warnings are ignored on stable/beta
     pub fn emit(self) {
+        check_correctness();
         crate::imp::emit_diagnostic(self);
     }
 }
