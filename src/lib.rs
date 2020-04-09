@@ -18,8 +18,6 @@
 //!   (essentially inheriting the parent span).
 //! - If a panic occurs somewhere in your macro no errors will be displayed. This is not a
 //!   technical limitation but rather intentional design. `panic` is not for error reporting.
-//! - Temporary incompatible with `proc_macro_hack`, unfortunately. No worries, some highly
-//!   trained people are working on it!
 //!
 //! ### `#[proc_macro_error]` attribute
 //!
