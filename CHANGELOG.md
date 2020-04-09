@@ -1,3 +1,7 @@
+# v1.0.2 (2020-4-9)
+
+* An obsolete note was removed from documentation.
+
 # v1.0.1 (2020-4-9)
 
 * `proc-macro-hack` is now well tested and supported. Not sure about `proc-macro-nested`,
