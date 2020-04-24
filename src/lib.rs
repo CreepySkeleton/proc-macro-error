@@ -253,11 +253,7 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::needless_doctest_main)]
 
-// reexports for use in macros
-#[doc(hidden)]
-pub extern crate proc_macro;
-#[doc(hidden)]
-pub extern crate proc_macro2;
+extern crate proc_macro;
 
 pub use crate::{
     diagnostic::{Diagnostic, Level},
@@ -419,6 +415,10 @@ fn check_correctness() {
 /// **ALL THE STUFF INSIDE IS NOT PUBLIC API!!!**
 #[doc(hidden)]
 pub mod __export {
+    // reexports for use in macros
+    pub extern crate proc_macro;
+    pub extern crate proc_macro2;
+
     use proc_macro2::Span;
     use quote::ToTokens;
 

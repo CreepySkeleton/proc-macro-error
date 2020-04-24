@@ -104,7 +104,7 @@ macro_rules! abort {
 #[macro_export]
 macro_rules! abort_call_site {
     ($($tts:tt)*) => {
-        $crate::abort!($crate::proc_macro2::Span::call_site(), $($tts)*)
+        $crate::abort!($crate::__export::proc_macro2::Span::call_site(), $($tts)*)
     };
 }
 
@@ -136,7 +136,7 @@ macro_rules! emit_error {
 #[macro_export]
 macro_rules! emit_call_site_error {
     ($($tts:tt)*) => {
-        $crate::emit_error!($crate::proc_macro2::Span::call_site(), $($tts)*)
+        $crate::emit_error!($crate::__export::proc_macro2::Span::call_site(), $($tts)*)
     };
 }
 
@@ -166,7 +166,7 @@ macro_rules! emit_warning {
 #[macro_export]
 macro_rules! emit_call_site_warning {
     ($($tts:tt)*) => {{
-        $crate::emit_warning!($crate::proc_macro2::Span()::call_site(), $($tts)*)
+        $crate::emit_warning!($crate::__export::proc_macro2::Span()::call_site(), $($tts)*)
     }};
 }
 
