@@ -278,12 +278,13 @@
 extern crate proc_macro;
 
 pub use crate::{
-    diagnostic::{Diagnostic, Level},
+    diagnostic::{Diagnostic, DiagnosticExt, Level},
     dummy::{append_dummy, set_dummy},
 };
 pub use proc_macro_error_attr::proc_macro_error;
 
-use quote::quote;
+use proc_macro2::Span;
+use quote::{quote, ToTokens};
 
 use std::cell::Cell;
 use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
@@ -292,6 +293,7 @@ pub mod dummy;
 
 mod diagnostic;
 mod macros;
+mod sealed;
 
 #[cfg(use_fallback)]
 #[path = "imp/fallback.rs"]
@@ -300,6 +302,51 @@ mod imp;
 #[cfg(not(use_fallback))]
 #[path = "imp/delegate.rs"]
 mod imp;
+
+#[derive(Debug, Clone, Copy)]
+pub struct SpanRange {
+    pub first: Span,
+    pub last: Span,
+}
+
+impl SpanRange {
+    /// Create a range with the `first` and `last` spans being the same.
+    pub fn single_span(span: Span) -> Self {
+        SpanRange { first: span, last: span }
+    }
+
+    /// Create a `SpanRange` resolving at call site.
+    pub fn call_site() -> Self {
+        SpanRange::single_span(Span::call_site())
+    }
+
+    /// Construct span range from a `TokenStream`. This method always preserves all the
+    /// range.
+    ///
+    /// ### Note
+    ///
+    /// If the stream is empty, the result is `SpanRange::call_site()`. If the stream
+    /// consists of only one `TokenTree`, the result is `SpanRange::single_span(tt.span())`
+    /// that doesn't lose anything.
+    pub fn from_tokens(ts: &dyn ToTokens) -> Self {
+        let mut spans = ts.to_token_stream().into_iter().map(|tt| tt.span());
+        let first = spans.next().unwrap_or_else(|| Span::call_site());
+        let last = spans.last().unwrap_or(first);
+
+        SpanRange { first, last }
+    }
+
+    /// Join two span ranges. The resulting range will start at `self.first` and end at
+    /// `other.last`.
+    pub fn join_range(self, other: SpanRange) -> Self {
+        SpanRange { first: self.first, last: other.last }
+    }
+
+    /// Collapse the range into single span, preserving as much information as possible.
+    pub fn collapse(self) -> Span {
+        self.first.join(self.last).unwrap_or(self.first)
+    }
+}
 
 /// This traits expands `Result<T, Into<Diagnostic>>` with some handy shortcuts.
 pub trait ResultExt {
@@ -444,45 +491,64 @@ pub mod __export {
     use proc_macro2::Span;
     use quote::ToTokens;
 
+    use crate::SpanRange;
+
     // inspired by
     // https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md#simple-application
 
-    pub trait DoubleSpanToTokens {
+    pub trait SpanAsSpanRange {
         #[allow(non_snake_case)]
-        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span);
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange;
     }
 
-    pub trait DoubleSpanSingleSpan2 {
+    pub trait Span2AsSpanRange {
         #[allow(non_snake_case)]
-        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span);
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange;
     }
 
-    pub trait DoubleSpanSingleSpan {
+    pub trait ToTokensAsSpanRange {
         #[allow(non_snake_case)]
-        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span);
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange;
     }
 
-    impl<T: ToTokens> DoubleSpanToTokens for &T {
-        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span) {
+    pub trait SpanRangeAsSpanRange {
+        #[allow(non_snake_case)]
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange;
+    }
+
+    impl<T: ToTokens> ToTokensAsSpanRange for &T {
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange {
             let mut ts = self.to_token_stream().into_iter();
-            let start = ts
+            let first = ts
                 .next()
                 .map(|tt| tt.span())
                 .unwrap_or_else(Span::call_site);
-            let end = ts.last().map(|tt| tt.span()).unwrap_or(start);
-            (start, end)
+            let last = ts.last().map(|tt| tt.span()).unwrap_or(first);
+            SpanRange { first, last }
         }
     }
 
-    impl DoubleSpanSingleSpan2 for Span {
-        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span) {
-            (*self, *self)
+    impl Span2AsSpanRange for Span {
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange {
+            SpanRange {
+                first: *self,
+                last: *self,
+            }
         }
     }
 
-    impl DoubleSpanSingleSpan for proc_macro::Span {
-        fn FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS(&self) -> (Span, Span) {
-            (self.clone().into(), self.clone().into())
+    impl SpanAsSpanRange for proc_macro::Span {
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange {
+            SpanRange {
+                first: self.clone().into(),
+                last: self.clone().into(),
+            }
+        }
+    }
+
+    impl SpanRangeAsSpanRange for SpanRange {
+        fn FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange(&self) -> SpanRange {
+            *self
         }
     }
 }

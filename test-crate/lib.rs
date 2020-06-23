@@ -6,6 +6,8 @@ use proc_macro2::{Span, TokenStream};
 use proc_macro_error::{
     abort, abort_call_site, diagnostic, emit_call_site_warning, emit_error, emit_warning,
     proc_macro_error, set_dummy, Diagnostic, Level, OptionExt, ResultExt,
+    abort, diagnostic, emit_error, proc_macro_error, set_dummy, Diagnostic, Level, OptionExt,
+    ResultExt, SpanRange,
 };
 use syn::{parse_macro_input, spanned::Spanned};
 
@@ -240,6 +242,15 @@ pub fn to_tokens_span(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     emit_error!(ty, "whole type");
     emit_error!(ty.span(), "explicit .span()");
     quote!().into()
+}
+
+#[proc_macro]
+#[proc_macro_error]
+pub fn explicit_span_range(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let mut spans = input.into_iter().step_by(2).map(|s| s.span());
+    let first = Span::from(spans.next().unwrap());
+    let last = Span::from(spans.nth(1).unwrap());
+    abort!(SpanRange { first, last }, "explicit SpanRange")
 }
 
 // Children messages

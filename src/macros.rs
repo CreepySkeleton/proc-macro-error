@@ -15,12 +15,17 @@ macro_rules! diagnostic {
     // span, message, help
     ($span:expr, $level:expr, $fmt:expr, $($args:expr),+ ; $($rest:tt)+) => {{
         #[allow(unused_imports)]
-        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
+        use $crate::__export::{
+            ToTokensAsSpanRange,
+            Span2AsSpanRange,
+            SpanAsSpanRange,
+            SpanRangeAsSpanRange
+        };
+        use $crate::DiagnosticExt;
+        let span_range = (&$span).FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange();
 
-        let diag = $crate::Diagnostic::double_spanned(
-            start,
-            end,
+        let diag = $crate::Diagnostic::spanned_range(
+            span_range,
             $level,
             format!($fmt, $($args),*)
         );
@@ -30,10 +35,16 @@ macro_rules! diagnostic {
 
     ($span:expr, $level:expr, $msg:expr ; $($rest:tt)+) => {{
         #[allow(unused_imports)]
-        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
+        use $crate::__export::{
+            ToTokensAsSpanRange,
+            Span2AsSpanRange,
+            SpanAsSpanRange,
+            SpanRangeAsSpanRange
+        };
+        use $crate::DiagnosticExt;
+        let span_range = (&$span).FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange();
 
-        let diag = $crate::Diagnostic::double_spanned(start, end, $level, $msg.to_string());
+        let diag = $crate::Diagnostic::spanned_range(span_range, $level, $msg.to_string());
         $crate::__pme__suggestions!(diag $($rest)*);
         diag
     }};
@@ -41,12 +52,17 @@ macro_rules! diagnostic {
     // span, message, no help
     ($span:expr, $level:expr, $fmt:expr, $($args:expr),+) => {{
         #[allow(unused_imports)]
-        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
+        use $crate::__export::{
+            ToTokensAsSpanRange,
+            Span2AsSpanRange,
+            SpanAsSpanRange,
+            SpanRangeAsSpanRange
+        };
+        use $crate::DiagnosticExt;
+        let span_range = (&$span).FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange();
 
-        $crate::Diagnostic::double_spanned(
-            start,
-            end,
+        $crate::Diagnostic::spanned_range(
+            span_range,
             $level,
             format!($fmt, $($args),*)
         )
@@ -54,10 +70,16 @@ macro_rules! diagnostic {
 
     ($span:expr, $level:expr, $msg:expr) => {{
         #[allow(unused_imports)]
-        use $crate::__export::{DoubleSpanToTokens, DoubleSpanSingleSpan, DoubleSpanSingleSpan2};
-        let (start, end) = (&$span).FIRST_ARG_MUST_EITHER_BE_SPAN_OR_IMPLEMENT_TO_TOKENS();
+        use $crate::__export::{
+            ToTokensAsSpanRange,
+            Span2AsSpanRange,
+            SpanAsSpanRange,
+            SpanRangeAsSpanRange
+        };
+        use $crate::DiagnosticExt;
+        let span_range = (&$span).FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR_BE_SpanRange();
 
-        $crate::Diagnostic::double_spanned(start, end, $level, $msg.to_string())
+        $crate::Diagnostic::spanned_range(span_range, $level, $msg.to_string())
     }};
 
 
