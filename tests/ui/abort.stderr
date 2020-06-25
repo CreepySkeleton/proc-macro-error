@@ -38,3 +38,11 @@ error: This is an error
   |
 8 | abort_notes!(one, two);
   |              ^^^
+
+error: abort_call_site! test
+ --> $DIR/abort.rs:9:1
+  |
+9 | abort_call_site_test!(one, two);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

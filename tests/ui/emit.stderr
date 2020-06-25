@@ -1,26 +1,34 @@
 error: emit!(span, from) test
  --> $DIR/emit.rs:4:7
   |
-4 | emit!(one, two, three, four);
+4 | emit!(one, two, three, four, five);
   |       ^^^
 
 error: emit!(span, expr1, expr2) test
  --> $DIR/emit.rs:4:12
   |
-4 | emit!(one, two, three, four);
+4 | emit!(one, two, three, four, five);
   |            ^^^
 
 error: emit!(span, single_expr) test
  --> $DIR/emit.rs:4:17
   |
-4 | emit!(one, two, three, four);
+4 | emit!(one, two, three, four, five);
   |                 ^^^^^
 
 error: Diagnostic::emit() test
  --> $DIR/emit.rs:4:24
   |
-4 | emit!(one, two, three, four);
+4 | emit!(one, two, three, four, five);
   |                        ^^^^
+
+error: emit_call_site_error!(expr) test
+ --> $DIR/emit.rs:4:1
+  |
+4 | emit!(one, two, three, four, five);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: This is an error
 

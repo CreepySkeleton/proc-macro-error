@@ -4,8 +4,8 @@ extern crate proc_macro;
 
 use proc_macro2::{Span, TokenStream};
 use proc_macro_error::{
-    abort, diagnostic, emit_error, proc_macro_error, set_dummy, Diagnostic, Level, OptionExt,
-    ResultExt,
+    abort, abort_call_site, diagnostic, emit_call_site_warning, emit_error, emit_warning,
+    proc_macro_error, set_dummy, Diagnostic, Level, OptionExt, ResultExt,
 };
 use syn::{parse_macro_input, spanned::Spanned};
 
@@ -37,6 +37,12 @@ pub fn abort_format(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 #[proc_macro]
 #[proc_macro_error]
+pub fn abort_call_site_test(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    abort_call_site!("abort_call_site! test")
+}
+
+#[proc_macro]
+#[proc_macro_error]
 pub fn direct_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
     Diagnostic::spanned(span.into(), Level::Error, "Diagnostic::abort() test".into()).abort()
@@ -62,6 +68,12 @@ pub fn emit(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         "Diagnostic::emit() test".into(),
     )
     .emit();
+
+    emit_call_site_error!("emit_call_site_error!(expr) test");
+
+    // NOOP on stable, just checking that the macros themselves compile.
+    emit_warning!(spans.next().unwrap(), "emit_warning! test");
+    emit_call_site_warning!("emit_call_site_warning! test");
 
     quote!().into()
 }
