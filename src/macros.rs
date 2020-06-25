@@ -166,7 +166,7 @@ macro_rules! emit_warning {
 #[macro_export]
 macro_rules! emit_call_site_warning {
     ($($tts:tt)*) => {{
-        $crate::emit_warning!($crate::__export::proc_macro2::Span()::call_site(), $($tts)*)
+        $crate::emit_warning!($crate::__export::proc_macro2::Span::call_site(), $($tts)*)
     }};
 }
 
