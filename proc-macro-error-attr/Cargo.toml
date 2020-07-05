@@ -18,9 +18,6 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 quote = "1"
 proc-macro2 = "1"
-syn-mid = "0.5"
-# "derive" is for `Attribute`, "parsing" is for `Parse`
-syn = { version = "1", default-features = false, features = ["derive", "parsing", "proc-macro", "printing"] }
 
 [build-dependencies]
 version_check = "0.9"

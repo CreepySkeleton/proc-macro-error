@@ -181,7 +181,8 @@ impl ToTokens for Diagnostic {
                 Cow::Owned(message)
             };
 
-            let msg = syn::LitStr::new(&*message, end);
+            let mut msg = proc_macro2::Literal::string(&message);
+            msg.set_span(end);
             let group = quote_spanned!(end=> { #msg } );
             quote_spanned!(start=> compile_error!#group)
         }
@@ -216,6 +217,7 @@ impl SuggestionKind {
     }
 }
 
+#[cfg(feature = "syn-error")]
 impl From<syn::Error> for Diagnostic {
     fn from(err: syn::Error) -> Self {
         use proc_macro2::{Delimiter, TokenTree};

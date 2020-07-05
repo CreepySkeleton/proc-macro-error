@@ -13,6 +13,7 @@ use syn::{parse_macro_input, spanned::Spanned};
 
 #[proc_macro]
 #[proc_macro_error]
+#[cfg(feature = "syn-error")]
 pub fn abort_from(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
     abort!(
@@ -145,7 +146,7 @@ pub fn emit_notes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro]
 #[proc_macro_error]
 pub fn option_ext(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let none: Option<syn::Error> = None;
+    let none: Option<Diagnostic> = None;
     none.expect_or_abort("Option::expect_or_abort() test");
     quote!().into()
 }
@@ -154,7 +155,7 @@ pub fn option_ext(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro_error]
 pub fn result_unwrap_or_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
-    let err = syn::Error::new(span.into(), "Result::unwrap_or_abort() test");
+    let err = Diagnostic::spanned(span.into(), Level::Error, "Result::unwrap_or_abort() test");
     let res: Result<(), _> = Err(err);
     res.unwrap_or_abort();
     quote!().into()
@@ -164,7 +165,7 @@ pub fn result_unwrap_or_abort(input: proc_macro::TokenStream) -> proc_macro::Tok
 #[proc_macro_error]
 pub fn result_expect_or_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
-    let err = syn::Error::new(span.into(), "Result::expect_or_abort() test");
+    let err = Diagnostic::spanned(span.into(), Level::Error, "Result::expect_or_abort() test");
     let res: Result<(), _> = Err(err);
     res.expect_or_abort("BOOM");
     quote!().into()
@@ -228,11 +229,12 @@ pub fn multiple_tokens(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let input = proc_macro2::TokenStream::from(input);
-    Err(syn::Error::new_spanned(input, "...")).unwrap_or_abort()
+    abort!(input, "...");
 }
 
 #[proc_macro]
 #[proc_macro_error]
+#[cfg(feature = "syn-error")]
 pub fn to_tokens_span(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ty = parse_macro_input!(input as syn::Type);
     emit_error!(ty, "whole type");
