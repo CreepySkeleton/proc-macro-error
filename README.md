@@ -7,7 +7,15 @@
 This crate aims to make error reporting in proc-macros simple and easy to use.
 Migrate from `panic!`-based errors for as little effort as possible!
 
-Also, there's ability to [append a dummy token stream][crate::dummy] to your errors.
+Also, you can explicitly [append a dummy token stream][crate::dummy] to your errors.
+
+To achieve his, this crate serves as a tiny shim around `proc_macro::Diagnostic` and
+`compile_error!`. It detects the most preferable way to emit errors based on compiler's version.
+When the underlying diagnostic type is finally stabilized, this crate will be simply
+delegating to it, requiring no changes in your code!
+
+So you can just use this crate and have *both* some of `proc_macro::Diagnostic` functionality
+available on stable ahead of time and your error-reporting code future-proof.
 
 ```toml
 [dependencies]
@@ -242,9 +250,9 @@ be dual licensed as above, without any additional terms or conditions.
 [compl_err]: https://doc.rust-lang.org/std/macro.compile_error.html
 [`proc_macro::Diagnostic`]: https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html
 
-[crate::dummy]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/dummy/index.html
-[crate::multi]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/multi/index.html
+[crate::dummy]: https://docs.rs/proc-macro-error/1/proc_macro_error/dummy/index.html
+[crate::multi]: https://docs.rs/proc-macro-error/1/proc_macro_error/multi/index.html
 
-[`abort_call_site!`]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/macro.abort_call_site.html
-[`abort!`]: https://docs.rs/proc-macro-error/0.4/proc_macro_error/macro.abort.html
+[`abort_call_site!`]: https://docs.rs/proc-macro-error/1/proc_macro_error/macro.abort_call_site.html
+[`abort!`]: https://docs.rs/proc-macro-error/1/proc_macro_error/macro.abort.html
 [guide]: https://docs.rs/proc-macro-error
