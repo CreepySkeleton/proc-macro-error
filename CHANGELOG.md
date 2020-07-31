@@ -1,3 +1,14 @@
+# v1.0.4 (2020-7-31)
+
+* `SpanRange` facility is now public.
+* Docs have been improved.
+* Introduced the `syn-error` feature so you can opt-out from the `syn` dependency.
+
+# v1.0.3 (2020-6-26)
+
+* Corrected a few typos.
+* Fixed the `emit_call_site_warning` macro.
+
 # v1.0.2 (2020-4-9)
 
 * An obsolete note was removed from documentation.
