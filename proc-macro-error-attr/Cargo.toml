@@ -1,6 +1,6 @@
 [package]
 name = "proc-macro-error-attr"
-version = "1.0.3"
+version = "1.0.4"
 authors = ["CreepySkeleton <creepy-skeleton@yandex.ru>"]
 edition = "2018"
 description = "Attribute macro for proc-macro-error crate"
