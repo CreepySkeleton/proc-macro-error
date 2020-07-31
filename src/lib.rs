@@ -6,9 +6,9 @@
 //! (Also, you can explicitly [append a dummy token stream](dummy/index.html) to your errors).
 //!
 //! To achieve his, this crate serves as a tiny shim around `proc_macro::Diagnostic` and
-//! `compile_error!`. It detects the most preferable way to emit errors based on compiler's version.
+//! `compile_error!`. It detects the best way of emitting available based on compiler's version.
 //! When the underlying diagnostic type is finally stabilized, this crate will simply be
-//! delegating to it, requiring no changes in your code!
+//! delegating to it requiring no changes in your code!
 //!
 //! So you can just use this crate and have *both* some of `proc_macro::Diagnostic` functionality
 //! available on stable ahead of time *and* your error-reporting code future-proof.
@@ -17,7 +17,7 @@
 //!
 //! This crate provides *enabled by default* `syn-error` feature that gates
 //! `impl From<syn::Error> for Diagnostic` conversion. If you don't use `syn` and want
-//! to cut off some of compilation time, you can disable ii via
+//! to cut off some of compilation time, you can disable it via
 //!
 //! ```toml
 //! [dependencies]
