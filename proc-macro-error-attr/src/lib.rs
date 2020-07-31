@@ -68,7 +68,7 @@ fn impl_proc_macro_error(attr: TokenStream2, input: TokenStream2) -> Result<Toke
             Span::call_site(),
             "#[proc_macro_error] attribute can be used only with procedural macros\n\n  \
             = hint: if you are really sure that #[proc_macro_error] should be applied \
-            to this exact function use, #[proc_macro_error(allow_not_macro)]\n"
+            to this exact function, use #[proc_macro_error(allow_not_macro)]\n"
                 .into(),
         ));
     }

@@ -8,11 +8,12 @@ use proc_macro_error::{
     abort, abort_call_site, diagnostic, emit_call_site_warning, emit_warning, emit_error, SpanRange,
 };
 
+use syn::{parse_macro_input, spanned::Spanned};
+
 // Macros and Diagnostic
 
 #[proc_macro]
 #[proc_macro_error]
-#[cfg(feature = "syn-error")]
 pub fn abort_from(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
     abort!(
@@ -233,7 +234,6 @@ pub fn multiple_tokens(
 
 #[proc_macro]
 #[proc_macro_error]
-#[cfg(feature = "syn-error")]
 pub fn to_tokens_span(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ty = parse_macro_input!(input as syn::Type);
     emit_error!(ty, "whole type");
