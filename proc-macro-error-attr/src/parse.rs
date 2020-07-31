@@ -28,12 +28,12 @@ fn parse_next_attr(
     input: &mut Peekable<impl Iterator<Item = TokenTree>>,
 ) -> Result<Option<Attribute>> {
     let shebang = match input.peek() {
-        Some(TokenTree::Punct(punct)) if punct.as_char() == '#' => input.next().unwrap(),
+        Some(TokenTree::Punct(ref punct)) if punct.as_char() == '#' => input.next().unwrap(),
         _ => return Ok(None),
     };
 
     let group = match input.peek() {
-        Some(TokenTree::Group(group)) if group.delimiter() == Delimiter::Bracket => {
+        Some(TokenTree::Group(ref group)) if group.delimiter() == Delimiter::Bracket => {
             let res = group.clone();
             input.next();
             res
@@ -60,7 +60,7 @@ fn parse_signature(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Vec
     let mut sig = Vec::new();
     loop {
         match input.peek() {
-            Some(TokenTree::Group(group)) if group.delimiter() == Delimiter::Brace => {
+            Some(TokenTree::Group(ref group)) if group.delimiter() == Delimiter::Brace => {
                 return sig;
             }
             None => return sig,

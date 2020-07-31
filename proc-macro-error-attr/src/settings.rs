@@ -49,7 +49,7 @@ pub(crate) fn parse_settings(input: TokenStream) -> Result<Settings> {
         }
 
         match input.next() {
-            Some(TokenTree::Punct(punct)) if punct.as_char() == ',' => {}
+            Some(TokenTree::Punct(ref punct)) if punct.as_char() == ',' => {}
             None => return Ok(res),
             other => {
                 let span = other.map_or(Span::call_site(), |tt| tt.span());
