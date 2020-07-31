@@ -45,8 +45,12 @@ pub(crate) fn emit_diagnostic(diag: Diagnostic) {
 
     for (kind, msg, span) in suggestions {
         res = match (kind, span) {
-            (SuggestionKind::Note, Some(span_range)) => res.span_note(span_range.collapse().unwrap(), msg),
-            (SuggestionKind::Help, Some(span_range)) => res.span_help(span_range.collapse().unwrap(), msg),
+            (SuggestionKind::Note, Some(span_range)) => {
+                res.span_note(span_range.collapse().unwrap(), msg)
+            }
+            (SuggestionKind::Help, Some(span_range)) => {
+                res.span_help(span_range.collapse().unwrap(), msg)
+            }
             (SuggestionKind::Note, None) => res.note(msg),
             (SuggestionKind::Help, None) => res.help(msg),
         }

@@ -312,7 +312,10 @@ pub struct SpanRange {
 impl SpanRange {
     /// Create a range with the `first` and `last` spans being the same.
     pub fn single_span(span: Span) -> Self {
-        SpanRange { first: span, last: span }
+        SpanRange {
+            first: span,
+            last: span,
+        }
     }
 
     /// Create a `SpanRange` resolving at call site.
@@ -339,7 +342,10 @@ impl SpanRange {
     /// Join two span ranges. The resulting range will start at `self.first` and end at
     /// `other.last`.
     pub fn join_range(self, other: SpanRange) -> Self {
-        SpanRange { first: self.first, last: other.last }
+        SpanRange {
+            first: self.first,
+            last: other.last,
+        }
     }
 
     /// Collapse the range into single span, preserving as much information as possible.
