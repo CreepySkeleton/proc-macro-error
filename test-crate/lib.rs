@@ -4,12 +4,9 @@ extern crate proc_macro;
 
 use proc_macro2::{Span, TokenStream};
 use proc_macro_error::{
-    abort, abort_call_site, diagnostic, emit_call_site_warning, emit_error, emit_warning,
     proc_macro_error, set_dummy, Diagnostic, Level, OptionExt, ResultExt,
-    abort, diagnostic, emit_error, proc_macro_error, set_dummy, Diagnostic, Level, OptionExt,
-    ResultExt, SpanRange,
+    abort, abort_call_site, diagnostic, emit_call_site_warning, emit_warning, emit_error, SpanRange,
 };
-use syn::{parse_macro_input, spanned::Spanned};
 
 // Macros and Diagnostic
 
@@ -157,7 +154,7 @@ pub fn option_ext(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro_error]
 pub fn result_unwrap_or_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
-    let err = Diagnostic::spanned(span.into(), Level::Error, "Result::unwrap_or_abort() test");
+    let err = Diagnostic::spanned(span.into(), Level::Error, "Result::unwrap_or_abort() test".to_string());
     let res: Result<(), _> = Err(err);
     res.unwrap_or_abort();
     quote!().into()
@@ -167,7 +164,7 @@ pub fn result_unwrap_or_abort(input: proc_macro::TokenStream) -> proc_macro::Tok
 #[proc_macro_error]
 pub fn result_expect_or_abort(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = input.into_iter().next().unwrap().span();
-    let err = Diagnostic::spanned(span.into(), Level::Error, "Result::expect_or_abort() test");
+    let err = Diagnostic::spanned(span.into(), Level::Error, "Result::expect_or_abort() test".to_string());
     let res: Result<(), _> = Err(err);
     res.expect_or_abort("BOOM");
     quote!().into()

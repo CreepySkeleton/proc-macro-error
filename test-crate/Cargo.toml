@@ -16,8 +16,4 @@ proc-macro2 = "1"
 
 [dependencies.syn]
 version = "1"
-optional = true
 default-features = false
-
-[features]
-syn-error = ["syn"]
