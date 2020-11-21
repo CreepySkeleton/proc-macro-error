@@ -14,7 +14,7 @@ if cargo test --all ; then
 
     git config user.name "${GITLAB_USER_NAME}"
     git config user.email "${GITLAB_USER_EMAIL}"
-    git add -A
+    git add ./tests/ui/*.stderr
     git commit -m "Adjust .stderr files"
     git push "http://${GITLAB_USER_NAME}:${GITLAB_PERSONAL_ACCESS_TOKEN}@gitlab.com/CreepySkeleton/proc-macro-error" HEAD:master
     exit 0
