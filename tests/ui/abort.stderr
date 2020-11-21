@@ -1,4 +1,4 @@
-BOOMerror: abort!(span, from) test
+error: abort!(span, from) test
  --> $DIR/abort.rs:4:13
   |
 4 | abort_from!(one, two);
