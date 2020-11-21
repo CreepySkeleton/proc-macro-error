@@ -4,6 +4,7 @@ set -e
 
 export TRYBUILD=overwrite
 if cargo test --all ; then
+    apt-get install -y git
     git config user.name "${GITLAB_USER_NAME}"
     git config user.email "${GITLAB_USER_EMAIL}"
     git add -A
