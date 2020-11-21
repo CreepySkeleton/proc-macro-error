@@ -1,7 +1,7 @@
 set -e
 
 apt-get install -y git
-[[ "$(git branch --show-current)" != master ]] && exit 1
+[[ "$(git rev-parse --abbrev-ref HEAD)" != master ]] && exit 1
 
 export TRYBUILD=overwrite
 if cargo test --all ; then
