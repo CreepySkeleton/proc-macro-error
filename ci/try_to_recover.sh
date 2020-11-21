@@ -2,10 +2,9 @@ set -e
 
 apt-get install -y git
 
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-echo "BRANCH: $BRANCH"
+echo "BRANCH: $CI_COMMIT_BRANCH"
 
-[[ "$BRANCH" != master ]] && exit 1
+[[ "$CI_COMMIT_BRANCH" != master ]] && exit 1
 
 echo "Trying to adjust .stderr files..."
 
