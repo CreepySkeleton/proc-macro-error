@@ -23,7 +23,9 @@ stages:
 
 
 test-stable:
-  <<: *test_all_template
+  <<: *setup_template
+  script:
+    - cargo test --all || bash ./ci/try_to_recover.sh
   variables:
     RUST_VERSION: stable
 
