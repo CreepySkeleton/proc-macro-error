@@ -1,3 +1,41 @@
+warning: panic message is not a string literal
+   --> $DIR/lib.rs:472:12
+    |
+472 |     panic!(AbortNow)
+    |            ^^^^^^^^
+    |
+    = note: `#[warn(non_fmt_panic)]` on by default
+    = note: this is no longer accepted in Rust 2021
+help: add a "{}" format string to Display the message
+    |
+472 |     panic!("{}", AbortNow)
+    |            ^^^^^
+help: or use std::panic::panic_any instead
+    |
+472 |     std::panic::panic_any(AbortNow)
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: 1 warning emitted
+
+warning: panic message is not a string literal
+   --> $DIR/lib.rs:472:12
+    |
+472 |     panic!(AbortNow)
+    |            ^^^^^^^^
+    |
+    = note: `#[warn(non_fmt_panic)]` on by default
+    = note: this is no longer accepted in Rust 2021
+help: add a "{}" format string to Display the message
+    |
+472 |     panic!("{}", AbortNow)
+    |            ^^^^^
+help: or use std::panic::panic_any instead
+    |
+472 |     std::panic::panic_any(AbortNow)
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: 1 warning emitted
+
 error: main macro message
  --> $DIR/children_messages.rs:4:20
   |
