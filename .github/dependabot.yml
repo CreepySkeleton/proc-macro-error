@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: serde_derive
+    versions:
+    - "> 1.0.107"
+  - dependency-name: toml
+    versions:
+    - "> 0.5.2"
