@@ -13,7 +13,7 @@ help: add a "{}" format string to Display the message
 help: or use std::panic::panic_any instead
     |
 472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^^
+    |     ^^^^^^^^^^^^^^^^^^^^^
 
 warning: 1 warning emitted
 
@@ -32,7 +32,7 @@ help: add a "{}" format string to Display the message
 help: or use std::panic::panic_any instead
     |
 472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^^
+    |     ^^^^^^^^^^^^^^^^^^^^^
 
 warning: 1 warning emitted
 
