@@ -45,4 +45,4 @@ error: #[proc_macro_error] attribute can be used only with procedural macros
 3 | #[proc_macro_error]
   | ^^^^^^^^^^^^^^^^^^^
   |
-  = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the attribute macro `proc_macro_error` (in Nightly builds, run with -Z macro-backtrace for more info)

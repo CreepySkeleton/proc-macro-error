@@ -48,4 +48,4 @@ error[E0599]: the method `FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR
   = note: the following trait bounds were not satisfied:
           `Foo: quote::to_tokens::ToTokens`
           which is required by `&Foo: ToTokensAsSpanRange`
-  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `$crate::diagnostic` (in Nightly builds, run with -Z macro-backtrace for more info)

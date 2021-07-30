@@ -66,7 +66,7 @@ error: emit_call_site_error!(expr) test
 4 | emit!(one, two, three, four, five);
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
-  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `emit` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: This is an error
 

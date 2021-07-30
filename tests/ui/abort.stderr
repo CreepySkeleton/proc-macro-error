@@ -83,4 +83,4 @@ error: abort_call_site! test
 9 | abort_call_site_test!(one, two);
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
-  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `abort_call_site_test` (in Nightly builds, run with -Z macro-backtrace for more info)
