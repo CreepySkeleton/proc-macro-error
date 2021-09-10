@@ -4,8 +4,9 @@ warning: panic message is not a string literal
 472 |     panic!(AbortNow)
     |            ^^^^^^^^
     |
-    = note: `#[warn(non_fmt_panic)]` on by default
-    = note: this is no longer accepted in Rust 2021
+    = note: `#[warn(non_fmt_panics)]` on by default
+    = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
+    = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
 help: add a "{}" format string to Display the message
     |
 472 |     panic!("{}", AbortNow)
@@ -14,27 +15,6 @@ help: or use std::panic::panic_any instead
     |
 472 |     std::panic::panic_any(AbortNow)
     |     ^^^^^^^^^^^^^^^^^^^^^
-
-warning: 1 warning emitted
-
-warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
-    |
-472 |     panic!(AbortNow)
-    |            ^^^^^^^^
-    |
-    = note: `#[warn(non_fmt_panic)]` on by default
-    = note: this is no longer accepted in Rust 2021
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
-
-warning: 1 warning emitted
 
 error: explicit SpanRange
  --> $DIR/explicit_span_range.rs:4:22
