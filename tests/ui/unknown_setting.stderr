@@ -1,23 +1,17 @@
 warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
+   --> src/lib.rs:472:12
     |
 472 |     panic!(AbortNow)
-    |            ^^^^^^^^
+    |     ------ ^^^^^^^^
+    |     |
+    |     help: use std::panic::panic_any instead: `std::panic::panic_any`
     |
     = note: `#[warn(non_fmt_panics)]` on by default
     = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
     = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
 
 error: unknown setting `trololo`, expected one of `assert_unwind_safe`, `allow_not_macro`, `proc_macro_hack`
- --> $DIR/unknown_setting.rs:3:57
+ --> tests/ui/unknown_setting.rs:3:57
   |
 3 | #[proc_macro_error(allow_not_macro, assert_unwind_safe, trololo)]
   |                                                         ^^^^^^^

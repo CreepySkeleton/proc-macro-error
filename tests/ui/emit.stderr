@@ -1,47 +1,41 @@
 warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
+   --> src/lib.rs:472:12
     |
 472 |     panic!(AbortNow)
-    |            ^^^^^^^^
+    |     ------ ^^^^^^^^
+    |     |
+    |     help: use std::panic::panic_any instead: `std::panic::panic_any`
     |
     = note: `#[warn(non_fmt_panics)]` on by default
     = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
     = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
 
 error: emit!(span, from) test
- --> $DIR/emit.rs:4:7
+ --> tests/ui/emit.rs:4:7
   |
 4 | emit!(one, two, three, four, five);
   |       ^^^
 
 error: emit!(span, expr1, expr2) test
- --> $DIR/emit.rs:4:12
+ --> tests/ui/emit.rs:4:12
   |
 4 | emit!(one, two, three, four, five);
   |            ^^^
 
 error: emit!(span, single_expr) test
- --> $DIR/emit.rs:4:17
+ --> tests/ui/emit.rs:4:17
   |
 4 | emit!(one, two, three, four, five);
   |                 ^^^^^
 
 error: Diagnostic::emit() test
- --> $DIR/emit.rs:4:24
+ --> tests/ui/emit.rs:4:24
   |
 4 | emit!(one, two, three, four, five);
   |                        ^^^^
 
 error: emit_call_site_error!(expr) test
- --> $DIR/emit.rs:4:1
+ --> tests/ui/emit.rs:4:1
   |
 4 | emit!(one, two, three, four, five);
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -60,7 +54,7 @@ error: This is an error
   = note: spanned format note
   = note: Some note
 
- --> $DIR/emit.rs:5:13
+ --> tests/ui/emit.rs:5:13
   |
 5 | emit_notes!(one, two);
   |             ^^^

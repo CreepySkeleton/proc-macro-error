@@ -1,29 +1,23 @@
 warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
+   --> src/lib.rs:472:12
     |
 472 |     panic!(AbortNow)
-    |            ^^^^^^^^
+    |     ------ ^^^^^^^^
+    |     |
+    |     help: use std::panic::panic_any instead: `std::panic::panic_any`
     |
     = note: `#[warn(non_fmt_panics)]` on by default
     = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
     = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
 
 error: Result::unwrap_or_abort() test
- --> $DIR/result_ext.rs:4:25
+ --> tests/ui/result_ext.rs:4:25
   |
 4 | result_unwrap_or_abort!(one, two);
   |                         ^^^
 
 error: BOOM: Result::expect_or_abort() test
- --> $DIR/result_ext.rs:5:25
+ --> tests/ui/result_ext.rs:5:25
   |
 5 | result_expect_or_abort!(one, two);
   |                         ^^^

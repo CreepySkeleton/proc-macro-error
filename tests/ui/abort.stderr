@@ -1,41 +1,35 @@
 warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
+   --> src/lib.rs:472:12
     |
 472 |     panic!(AbortNow)
-    |            ^^^^^^^^
+    |     ------ ^^^^^^^^
+    |     |
+    |     help: use std::panic::panic_any instead: `std::panic::panic_any`
     |
     = note: `#[warn(non_fmt_panics)]` on by default
     = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
     = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
 
 error: abort!(span, from) test
- --> $DIR/abort.rs:4:13
+ --> tests/ui/abort.rs:4:13
   |
 4 | abort_from!(one, two);
   |             ^^^
 
 error: abort!(span, single_expr) test
- --> $DIR/abort.rs:5:18
+ --> tests/ui/abort.rs:5:18
   |
 5 | abort_to_string!(one, two);
   |                  ^^^
 
 error: abort!(span, expr1, expr2) test
- --> $DIR/abort.rs:6:15
+ --> tests/ui/abort.rs:6:15
   |
 6 | abort_format!(one, two);
   |               ^^^
 
 error: Diagnostic::abort() test
- --> $DIR/abort.rs:7:15
+ --> tests/ui/abort.rs:7:15
   |
 7 | direct_abort!(one, two);
   |               ^^^
@@ -52,13 +46,13 @@ error: This is an error
   = note: spanned format note
   = note: Some note
 
- --> $DIR/abort.rs:8:14
+ --> tests/ui/abort.rs:8:14
   |
 8 | abort_notes!(one, two);
   |              ^^^
 
 error: abort_call_site! test
- --> $DIR/abort.rs:9:1
+ --> tests/ui/abort.rs:9:1
   |
 9 | abort_call_site_test!(one, two);
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,29 +1,23 @@
 warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
+   --> src/lib.rs:472:12
     |
 472 |     panic!(AbortNow)
-    |            ^^^^^^^^
+    |     ------ ^^^^^^^^
+    |     |
+    |     help: use std::panic::panic_any instead: `std::panic::panic_any`
     |
     = note: `#[warn(non_fmt_panics)]` on by default
     = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
     = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
 
 error: whole type
- --> $DIR/to_tokens_span.rs:4:17
+ --> tests/ui/to_tokens_span.rs:4:17
   |
 4 | to_tokens_span!(std::option::Option);
   |                 ^^^^^^^^^^^^^^^^^^^
 
 error: explicit .span()
- --> $DIR/to_tokens_span.rs:4:17
+ --> tests/ui/to_tokens_span.rs:4:17
   |
 4 | to_tokens_span!(std::option::Option);
   |                 ^^^

@@ -1,23 +1,17 @@
 warning: panic message is not a string literal
-   --> $DIR/lib.rs:472:12
+   --> src/lib.rs:472:12
     |
 472 |     panic!(AbortNow)
-    |            ^^^^^^^^
+    |     ------ ^^^^^^^^
+    |     |
+    |     help: use std::panic::panic_any instead: `std::panic::panic_any`
     |
     = note: `#[warn(non_fmt_panics)]` on by default
     = note: this usage of panic!() is deprecated; it will be a hard error in Rust 2021
     = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/panic-macro-consistency.html>
-help: add a "{}" format string to Display the message
-    |
-472 |     panic!("{}", AbortNow)
-    |            ^^^^^
-help: or use std::panic::panic_any instead
-    |
-472 |     std::panic::panic_any(AbortNow)
-    |     ^^^^^^^^^^^^^^^^^^^^^
 
 error: BOOM
- --> $DIR/proc_macro_hack.rs:8:25
+ --> tests/ui/proc_macro_hack.rs:8:25
   |
 8 |     let nine = add_one!(two) + add_one!(2 + 3);
   |                         ^^^
@@ -25,7 +19,7 @@ error: BOOM
   = note: this error originates in the macro `proc_macro_call` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: BOOM
- --> $DIR/proc_macro_hack.rs:8:41
+ --> tests/ui/proc_macro_hack.rs:8:41
   |
 8 |     let nine = add_one!(two) + add_one!(2 + 3);
   |                                         ^^^^^
@@ -33,7 +27,7 @@ error: BOOM
   = note: this error originates in the macro `proc_macro_call` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 warning: unreachable expression
- --> $DIR/proc_macro_hack.rs:8:32
+ --> tests/ui/proc_macro_hack.rs:8:32
   |
 8 |     let nine = add_one!(two) + add_one!(2 + 3);
   |                -------------   ^^^^^^^^^^^^^^^ unreachable expression
