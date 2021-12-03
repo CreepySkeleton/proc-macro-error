@@ -1,7 +1,7 @@
 warning: panic message is not a string literal
-   --> src/lib.rs:472:12
+   --> src/lib.rs
     |
-472 |     panic!(AbortNow)
+    |     panic!(AbortNow)
     |     ------ ^^^^^^^^
     |     |
     |     help: use std::panic::panic_any instead: `std::panic::panic_any`
@@ -55,6 +55,6 @@ error: abort_call_site! test
  --> tests/ui/abort.rs:9:1
   |
 9 | abort_call_site_test!(one, two);
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
   = note: this error originates in the macro `abort_call_site_test` (in Nightly builds, run with -Z macro-backtrace for more info)

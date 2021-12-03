@@ -1,7 +1,7 @@
 warning: panic message is not a string literal
-   --> src/lib.rs:472:12
+   --> src/lib.rs
     |
-472 |     panic!(AbortNow)
+    |     panic!(AbortNow)
     |     ------ ^^^^^^^^
     |     |
     |     help: use std::panic::panic_any instead: `std::panic::panic_any`
@@ -14,6 +14,6 @@ error: Option::expect_or_abort() test
  --> tests/ui/option_ext.rs:4:1
   |
 4 | option_ext!(one, two);
-  | ^^^^^^^^^^^^^^^^^^^^^^
+  | ^^^^^^^^^^^^^^^^^^^^^
   |
   = note: this error originates in the macro `option_ext` (in Nightly builds, run with -Z macro-backtrace for more info)

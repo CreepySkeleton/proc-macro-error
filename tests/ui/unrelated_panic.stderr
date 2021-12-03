@@ -1,7 +1,7 @@
 warning: panic message is not a string literal
-   --> src/lib.rs:472:12
+   --> src/lib.rs
     |
-472 |     panic!(AbortNow)
+    |     panic!(AbortNow)
     |     ------ ^^^^^^^^
     |     |
     |     help: use std::panic::panic_any instead: `std::panic::panic_any`
@@ -14,6 +14,6 @@ error: proc macro panicked
  --> tests/ui/unrelated_panic.rs:4:1
   |
 4 | unrelated_panic!();
-  | ^^^^^^^^^^^^^^^^^^^
+  | ^^^^^^^^^^^^^^^^^^
   |
   = help: message: unrelated panic test

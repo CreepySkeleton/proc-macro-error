@@ -1,7 +1,7 @@
 warning: panic message is not a string literal
-   --> src/lib.rs:472:12
+   --> src/lib.rs
     |
-472 |     panic!(AbortNow)
+    |     panic!(AbortNow)
     |     ------ ^^^^^^^^
     |     |
     |     help: use std::panic::panic_any instead: `std::panic::panic_any`
@@ -38,7 +38,7 @@ error: emit_call_site_error!(expr) test
  --> tests/ui/emit.rs:4:1
   |
 4 | emit!(one, two, three, four, five);
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
   = note: this error originates in the macro `emit` (in Nightly builds, run with -Z macro-backtrace for more info)
 
