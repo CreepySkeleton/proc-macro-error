@@ -1,7 +1,7 @@
 warning: panic message is not a string literal
-   --> src/lib.rs:472:12
+   --> src/lib.rs
     |
-472 |     panic!(AbortNow)
+    |     panic!(AbortNow)
     |     ------ ^^^^^^^^
     |     |
     |     help: use std::panic::panic_any instead: `std::panic::panic_any`
@@ -12,8 +12,7 @@ warning: panic message is not a string literal
 
 error: #[proc_macro_error] attribute can be used only with procedural macros
 
-  = hint: if you are really sure that #[proc_macro_error] should be applied to this exact function, use #[proc_macro_error(allow_not_macro)]
-
+         = hint: if you are really sure that #[proc_macro_error] should be applied to this exact function, use #[proc_macro_error(allow_not_macro)]
  --> tests/ui/not_proc_macro.rs:3:1
   |
 3 | #[proc_macro_error]

@@ -1,7 +1,7 @@
 warning: panic message is not a string literal
-   --> src/lib.rs:472:12
+   --> src/lib.rs
     |
-472 |     panic!(AbortNow)
+    |     panic!(AbortNow)
     |     ------ ^^^^^^^^
     |     |
     |     help: use std::panic::panic_any instead: `std::panic::panic_any`
@@ -25,6 +25,15 @@ error: BOOM
   |                                         ^^^^^
   |
   = note: this error originates in the macro `proc_macro_call` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused macro definition: `proc_macro_call`
+ --> test-crate/proc-macro-hack-test/lib.rs
+  |
+  | / #[proc_macro_hack]
+  | | pub use demo_hack_impl::add_one;
+  | |_______________________________^
+  |
+  = note: `#[warn(unused_macros)]` on by default
 
 warning: unreachable expression
  --> tests/ui/proc_macro_hack.rs:8:32
