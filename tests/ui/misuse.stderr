@@ -23,7 +23,7 @@ error[E0599]: the method `FIRST_ARG_MUST_EITHER_BE_Span_OR_IMPLEMENT_ToTokens_OR
            `Foo: quote::to_tokens::ToTokens`
            which is required by `&Foo: ToTokensAsSpanRange`
 note: the following trait must be implemented
-  --> .cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.14/src/to_tokens.rs
+  --> .cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.15/src/to_tokens.rs
    |
    | / pub trait ToTokens {
    | |     /// Write `self` to the given `TokenStream`.
